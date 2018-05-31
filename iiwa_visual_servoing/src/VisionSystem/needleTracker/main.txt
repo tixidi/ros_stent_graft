@@ -1,0 +1,23 @@
+#include "GWTracking.h"
+
+void main ()
+{
+	int startingPointInstrument = 0;		// BaseGW: 0 Y=MAX; 1 Y=MIN;
+	int verbose					= 1;	
+	
+	double sigmaHessian			= 2.0;	
+	
+	IplImage *currFrame3c;
+	IplImage *currFrame1c;
+	
+	std::vector<Point2d> GWInitializationPoints;
+	std::vector<Point2d> GWDetectedPoints;
+
+	std::string seqName_in("Data/needle_11/");
+
+	GWTracking tracker( seqName_in, 0, startingPointInstrument, verbose, sigmaHessian );
+
+	tracker.initialization( GWInitializationPoints, currFrame3c, currFrame1c );
+	
+	tracker.runTracking( 1, currFrame3c, currFrame1c, GWDetectedPoints );
+} 

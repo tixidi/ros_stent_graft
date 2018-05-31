@@ -1,0 +1,119 @@
+
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/nonfree/features2d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/video/tracking.hpp>
+#include "opencv2/calib3d/calib3d.hpp"
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fstream>
+#include "AbsoluteOrientation.h"
+
+
+using namespace std;
+using namespace cv;
+
+//bool pointMatch_icp(vector<Point3d> m_R, vector<Point3d> m_C, Mat4d R_C);
+bool pointMatch_abs(vector<Point3d> m_R, vector<Point3d> m_C, Mat4d R_C);
+bool readPosition(string fname, vector<Point3d> points);
+
+int main(int argc, char *argv[])
+{
+
+    string fname_marker2robot = "marker2robot.xml";
+    string fname_marker2camera = "marker2camera.xml";
+
+    vector<Point3d> m_R, m_C;
+    Mat4d R_C = Mat4d::eye(4,4);
+    readPosition(fname_marker2robot, m_R);
+    readPosition(fname_marker2camera, m_C);
+    pointMatch_abs(m_R, m_C, R_C);
+
+    return 0;
+}
+
+bool readPosition(string fname, vector<Point3d> points)
+{
+    Mat tran;
+    FileStorage f_mat(fname, FileStorage::READ);
+    f_mat["tran"] >> tran;
+    Point3f tmpPoint;
+
+    for (int i=0; i<tran.rows; i++)
+    {
+        tmpPoint.x = tran.at<double>(i*4,4);
+        tmpPoint.y = tran.at<double>(i*4+1,4);
+        tmpPoint.z = tran.at<double>(i*4+2,4);
+        points[i] = tmpPoint;
+    }
+    return true;
+}
+
+bool pointMatch_abs(vector<Point3d> m_R, vector<Point3d> m_C, Mat4d R_C)
+{
+
+    std::vector<Point3D> left(m_R.size()), right(m_C.size());
+    for (int i=0; i<m_C.size(); i++)
+    {
+        left[i][0] = m_R[i].x;
+        left[i][1] = m_R[i].y;
+        left[i][2] = m_R[i].z;
+
+        right[i][0] = m_C[i].x;
+        right[i][1] = m_C[i].y;
+        right[i][2] = m_C[i].z;
+
+    }
+
+    Frame computedTransformation;
+    AbsoluteOrientation::compute(left,right,computedTransformation);
+
+    computedTransformation.getRotationMatrix(R_C.at<double>(0,0), R_C.at<double>(0,1), R_C.at<double>(0,2),
+                                             R_C.at<double>(1,0), R_C.at<double>(1,1), R_C.at<double>(1,2),
+                                             R_C.at<double>(2,0), R_C.at<double>(2,1), R_C.at<double>(2,2));
+    computedTransformation.getTranslation(R_C.at<double>(0,4),R_C.at<double>(0,4),R_C.at<double>(0,4));
+    return true;
+}
+
+//bool pointMatch_icp(vector<Point3d> m_R, vector<Point3d> m_C, Mat4d R_C)
+//{
+//    int num = m_C.size();
+//    // allocate model and template memory
+//    double* M = (double*)calloc(3*num,sizeof(double));
+//    double* T = (double*)calloc(3*num,sizeof(double));
+
+//    for (int i=0; i<num; i++)
+//    {
+//        M[i*3+0] = m_C[i].x;
+//        M[i*3+1] = m_C[i].y;
+//        M[i*3+2] = m_C[i].z;
+
+//        T[i*3+0] = m_R[i].x;
+//        T[i*3+1] = m_R[i].y;
+//        T[i*3+2] = m_R[i].z;
+//    }
+
+//    // start with identity as initial transformation
+//    // in practice you might want to use some kind of prediction here
+//    Matrix R = Matrix::eye(3);
+//    Matrix t(3,1);
+
+//    // run point-to-plane ICP (-1 = no outlier threshold)
+//    cout << endl << "Running ICP (point-to-plane, no outliers)" << endl;
+//    IcpPointToPlane icp(M,num,3);
+//    icp.fit(T,num,R,t,-1);
+
+//    for (int i=0; i<3; i++)
+
+//    {
+//        R_C.at<double>(i,0) = R.val[i][0];
+//        R_C.at<double>(i,1) = R.val[i][1];
+//        R_C.at<double>(i,2) = R.val[i][2];
+//        R_C.at<double>(i,3) = t.val[i][0];
+//    }
+
+//    return true;
+//}
