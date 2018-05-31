@@ -1,0 +1,16 @@
+ssh bh06@hi.doc.ic.ac.uk
+cd /home/yang/workspace/IIWa
+ssh-keygen -t rsa
+ssh-copy-id HamlynServer
+ssh HamlynServer
+git clone HamlynServer:/data/users/gg712/shared/Erl.git
+git clone HamlynServer:/data/users/gg712/shared/IIwa_Sunrise.git
+git clone HamlynServer:/data/users/gg712/shared/PathPlanners.git
+cd /home/yang/workspace/IIWa/ReflexxesTypeII/Linux
+make -j8
+make clean64 all64
+gcc --version
+ping 172.31.1.147
+
+
+
