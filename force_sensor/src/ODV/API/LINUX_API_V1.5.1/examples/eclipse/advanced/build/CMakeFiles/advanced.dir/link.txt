@@ -1,0 +1,1 @@
+/usr/bin/c++       CMakeFiles/advanced.dir/main.cpp.o  -o advanced  -L/home/yang/Programs/ODV/API/LINUX_API_V1.5.1/lib -rdynamic -lOMD -Wl,-rpath,/home/yang/Programs/ODV/API/LINUX_API_V1.5.1/lib 

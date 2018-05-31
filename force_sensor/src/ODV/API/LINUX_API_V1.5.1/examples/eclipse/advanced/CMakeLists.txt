@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 2.8)
+project(advanced)
+SET(CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/ )
+#include_directories ("${PROJECT_SOURCE_DIR}")
+INCLUDE_DIRECTORIES ("/home/yang/Programs/ODV/API/LINUX_API_V1.5.1/include")
+
+# header files
+SET(HEADER_PATH /home/yang/Programs/ODV/API/LINUX_API_V1.5.1/include/omd/)
+
+SET(simple_HEADER
+${HEADER_PATH}/opto.h 
+${HEADER_PATH}/optodaq.h
+${HEADER_PATH}/optopackage.h
+${HEADER_PATH}/optoports.h
+${HEADER_PATH}/sensorconfig.h
+)
+
+# library
+LINK_DIRECTORIES(/home/yang/Programs/ODV/API/LINUX_API_V1.5.1/lib)
+
+add_executable(advanced main.cpp ${advanced_HEADER})
+target_link_libraries(advanced -lOMD)
