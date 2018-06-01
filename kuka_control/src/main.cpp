@@ -103,8 +103,8 @@ int main(int argc, char **argv) {
 
 		ros::Publisher pub1 = nh.advertise<std_msgs::Int8>("video_record_command", 100);
 		ros::Publisher pub2 = nh.advertise<std_msgs::Bool>("suture_device_command", 100);
-		ros::Publisher pub3 = nh.advertise<sensor_msgs::JointState>("kuka0_command", 100);
-		ros::Publisher pub4 = nh.advertise<sensor_msgs::JointState>("kuka1_command", 100);		
+		//ros::Publisher pub3 = nh.advertise<sensor_msgs::JointState>("kuka0_command", 100);
+		//ros::Publisher pub4 = nh.advertise<sensor_msgs::JointState>("kuka1_command", 100);		
 		ros::Subscriber sub1 = nh.subscribe("tools_pose", 1000, posCallback1);
 		ros::Subscriber sub2 = nh.subscribe("read_suture_device_angle", 1000, posCallback2);
 		ros::Subscriber sub3 = nh.subscribe("kuka0_pose", 1000, posCallback3);
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
 						}
 
 					}
-
+/*
 						if (count0<jointsPose.size()){
 							//if (kuka0_reached && kuka1_reached){
 							if (kuka0_reached){
@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
 							}
 						}
 
-/*
+
 						if (count0<jointsPose.size()){
 							//if (kuka0_reached && kuka1_reached){
 							//if (kuka1_reached){

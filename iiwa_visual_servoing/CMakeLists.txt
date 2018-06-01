@@ -383,6 +383,7 @@ ${cvBlob_LIBS}
 ${REF_LIB}
 -lpthread
 -lOMD
+${catkin_LIBRARIES}
 )
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

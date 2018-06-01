@@ -63,7 +63,7 @@ void iiwaControl::setiiwaPose(Erl::Transformd &desiredPose)
 //    iiwaPose.setTranslation(desiredPose.getTranslation());
     desiredPose = Erl::Transformd::nearestOrthogonal(desiredPose); //Sometimes trans is not orth
     iiwa.setTransform(desiredPose);
-//    iiwa.waitForDestinationReached();
+    iiwa.waitForDestinationReached();
 }
 
 bool iiwaControl::iiwaReached()

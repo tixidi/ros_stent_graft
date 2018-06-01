@@ -1,10 +1,7 @@
 #include "kukaMotionPlanning.h"
-#include <ros/ros.h>
-#include <std_msgs/Float64MultiArray.h>
 
 //string SRC_FILES_DIR = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/";
-extern ros::Publisher pub_iiwa0_desiredEEInRob;
-//extern ros::Rate rate;
+
 KukaMotionPlanning::KukaMotionPlanning()
 {
 
@@ -2214,28 +2211,15 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
 
     cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
     cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
-    cout << "matrix 4d" << endl << desiredEEInRob<<endl;
-
-    //ros publish iiwaTransformd
-    std_msgs::Float64MultiArray msg;
-    for (int i = 0; i<3; i++){
-        for (int j = 0; j<4; j++){
-                msg.data.push_back(desiredEEInRob(i,j));
-        }
-    }
-    pub_iiwa0_desiredEEInRob.publish(msg);
-    //rate.sleep();
-
 
 
 //*********** Move robot *******************************
-/*#ifdef iiwaOn
+#ifdef iiwaOn
     iiwas[robotIndex]->setiiwaPose(iiwaTransformd);
     while(!iiwas[robotIndex]->iiwaReached())
     {
     }
 #endif
-*/
 // *****************************************************
 
 #ifdef SimulationON

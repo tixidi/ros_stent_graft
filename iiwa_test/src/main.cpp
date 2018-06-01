@@ -12,7 +12,20 @@ using namespace std;
 
 Eigen::Matrix<double, 7, 1> destJoints;
 bool newDest = false;
-void posCallback(const sensor_msgs::JointState::ConstPtr& msg){
+/*void posCallback(const sensor_msgs::JointState::ConstPtr& msg){
+		cout<<endl;
+		cout<<"destJoints ";
+		for (int i = 0; i < 7; i ++){
+				destJoints[i] = msg->position[i];
+				cout<<destJoints[i]<<" ";
+		}
+		cout<<endl;
+		cout<<"------------------------------------------------------------------------------"<<endl;
+		newDest = true;
+
+}*/
+
+void posCallback_destJoints(const sensor_msgs::JointState::ConstPtr& msg){
 		cout<<endl;
 		cout<<"destJoints ";
 		for (int i = 0; i < 7; i ++){
@@ -24,6 +37,10 @@ void posCallback(const sensor_msgs::JointState::ConstPtr& msg){
 		newDest = true;
 
 }
+
+
+
+
 
 int main(int argc,char **argv)
 {
@@ -48,10 +65,17 @@ int main(int argc,char **argv)
     ros::NodeHandle nh;
 		//ros::Publisher pub=nh.advertise<iiwa_test::ToolsPose>("kuka_pose", 100);
 		
+		//publisher 
 		ros::Publisher pub1=nh.advertise<iiwa_test::ToolsPose>("kuka"+kukaNo+"_pose", 100);
 		ros::Publisher pub2=nh.advertise<std_msgs::Bool>("kuka"+kukaNo+"_pose_done", 100);
-		string topicName = "kuka"+kukaNo+"_command";
-		ros::Subscriber sub = nh.subscribe(topicName, 1000, posCallback);
+		ros::Publisher pub_iiwa_reached=nh.advertise<std_msgs::Bool>("iiwa"+kukaNo+"_reached", 100);
+
+		//subscriber
+		//string topicName = "kuka"+kukaNo+"_command";
+		//ros::Subscriber sub = nh.subscribe(topicName, 1000, posCallback);
+		string topicName_destJoints = "iiwa"+kukaNo+"_destJoints";
+		cout<<topicName_destJoints<<endl;
+		ros::Subscriber sub = nh.subscribe(topicName_destJoints, 1000, posCallback_destJoints);
     srand(time(0));
     ros::Rate rate(10);
 
@@ -124,8 +148,7 @@ cout<<"print host: "<<params.hostname_<<endl;
 		outfile1.open("int_trajectory1.txt");
 		outfile<<currJoints[0]<<" "<<currJoints[1]<<" "<<currJoints[2]<<" "<<currJoints[3]<<" "<<currJoints[4]<<" "<<currJoints[5]<<" "<<currJoints[6]<<endl;
 		outfile1<<currJoints[0]<<" "<<currJoints[1]<<" "<<currJoints[2]<<" "<<currJoints[3]<<" "<<currJoints[4]<<" "<<currJoints[5]<<" "<<currJoints[6]<<endl;
-		//ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/traj_solution");
-		
+		//ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/traj_solution");	
 		while(ros::ok()) {
 				ros::spinOnce();
 				if (newDest){
@@ -211,6 +234,7 @@ cout<<"print host: "<<params.hostname_<<endl;
 									currJoints = kuka.getJoints();
 							if (mode==1)
 									currJoints = currTmpJoints;
+							//cout<<kuka.getMsrTransform()<<endl;
 /*
 							kuka.setJoints(destJoints);
 							std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -269,6 +293,7 @@ cout<<"print host: "<<params.hostname_<<endl;
 
 			}
 pub2.publish(true);
+pub_iiwa_reached.publish(true);
 //rate.sleep();
 				
 		}
