@@ -118,7 +118,8 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-	/home/charlie/Documents/workspace/ros_ws/devel/include/
+	#/home/charlie/Documents/workspace/ros_ws/devel/include/
+	${CMAKE_SOURCE_DIR}/../devel/include/
 )
 
 add_executable(kuka_control src/main.cpp)

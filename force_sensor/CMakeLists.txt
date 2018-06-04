@@ -134,11 +134,11 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/force_sensor_node.cpp)
 SET(CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/ )
-INCLUDE_DIRECTORIES ("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/ODV/API/LINUX_API_V1.5.1/include")
-INCLUDE_DIRECTORIES ("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/")
+INCLUDE_DIRECTORIES ("${CMAKE_CURRENT_SOURCE_DIR}/src/ODV/API/LINUX_API_V1.5.1/include")
+INCLUDE_DIRECTORIES ("${CMAKE_CURRENT_SOURCE_DIR}/src/")
 # header files
-SET(HEADER_PATH /home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/ODV/API/LINUX_API_V1.5.1/include/omd/)
-SET(PROJECT_PATH /home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/)
+SET(HEADER_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/ODV/API/LINUX_API_V1.5.1/include/omd/)
+SET(PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 SET(force_HEADER
 ${HEADER_PATH}/opto.h 
@@ -152,8 +152,8 @@ ${PROJECT_PATH}/forceSensor.h
 
 
 
-INCLUDE_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/ODV/API/LINUX_API_V1.5.1/lib)
-LINK_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/src/ODV/API/LINUX_API_V1.5.1/lib)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/ODV/API/LINUX_API_V1.5.1/lib)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/ODV/API/LINUX_API_V1.5.1/lib)
 
 
 
