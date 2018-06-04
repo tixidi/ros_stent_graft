@@ -119,19 +119,18 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-
 SET( CMAKE_CXX_FLAGS "-std=c++11")
 
-INCLUDE_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/)
-LINK_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-INCLUDE_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/SewingMachine/)
-LINK_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/SewingMachine/)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/SewingMachine/)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/SewingMachine/)
 
-INCLUDE_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/qextserialport)
-LINK_DIRECTORIES(/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/qextserialport)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/qextserialport)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/qextserialport)
 
-SET(SIMPLE_PATH /home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/needle_driver/src/)
+SET(SIMPLE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 SET(SIMPLE_HEADERS
 ${SIMPLE_PATH}/qextserialport/qextserialbase.h
 ${SIMPLE_PATH}/qextserialport/posix_qextserialport.h
