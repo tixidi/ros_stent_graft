@@ -1,10 +1,157 @@
 #include "kukaMotionPlanning.h"
-#include <ros/ros.h>
+
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Bool.h>
+#include "sensor_msgs/JointState.h"
+#include <iiwa_test/iiwaState.h>
+#include <map>
+
+
+ros::Publisher pub_iiwa0_desiredEEInRob;
+ros::Publisher pub_iiwa0_desiredEEInRob_sent;
+//ros::Publisher pub_iiwa0_reached;
+ros::Publisher pub_iiwa1_desiredEEInRob;
+ros::Publisher pub_iiwa1_desiredEEInRob_sent;
+//ros::Publisher pub_iiwa1_reached;
+//ros::Publisher pub_exotica_complete;
+
+ros::Subscriber sub_iiwa0_state;
+ros::Subscriber sub_iiwa0_reached;
+ros::Subscriber sub_iiwa0_connected;
+ros::Subscriber sub_iiwa1_state;
+ros::Subscriber sub_iiwa1_reached;
+ros::Subscriber sub_iiwa1_connected;
+ros::Subscriber sub_exotica_complete;
+//ros::Subscriber sub_iiwa0_currJoints;
+//ros::Subscriber sub_iiwa1_currJoints;
+
 
 //string SRC_FILES_DIR = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/";
-extern ros::Publisher pub_iiwa0_desiredEEInRob;
-//extern ros::Rate rate;
+
+
+
+/*
+void KukaMotionPlanning::posCallback_iiwa0_msrTransform(const std_msgs::Float64MultiArray::ConstPtr& msg){
+	//TODO
+	int count = 0;
+	for (int i = 0; i <3; i++){
+		for (int j = 0; j <4; j++){
+				iiwa0_currentMartix4d(i,j) = msg->data[count];
+				count++;
+		}
+	}
+	for (int i = 0; i <3; i++){
+		iiwa0_currentMartix4d(3,i) = 0;
+	}
+	iiwa0_currentMartix4d(3,3) = 1;
+	
+	iiwa0_currentTransformd = Functions::Eigen2Erl(iiwa0_currentMartix4d);
+
+}
+void KukaMotionPlanning::posCallback_iiwa1_msrTransform(const std_msgs::Float64MultiArray::ConstPtr& msg){
+	//TODO
+	int count = 0;
+	for (int i = 0; i <3; i++){
+		for (int j = 0; j <4; j++){
+				iiwa1_currentMartix4d(i,j) = msg->data[count];
+				count++;
+		}
+	}
+	for (int i = 0; i <3; i++){
+		iiwa1_currentMartix4d(3,i) = 0;
+	}
+	iiwa1_currentMartix4d(3,3) = 1;
+	
+	iiwa1_currentTransformd = Functions::Eigen2Erl(iiwa1_currentMartix4d);
+}*/
+
+
+
+void KukaMotionPlanning::posCallback_iiwa0_state(const iiwa_test::iiwaState::ConstPtr& msg){
+
+    //cout<<iiwa0_state_count <<" "<<msg->header.seq<<" "<<iiwa0_reached<<endl;
+//        cout<<"iiwa0 state =  "<<iiwa0_state_count<<" "<<msg->header.seq<<endl;
+    if (msg->header.seq-iiwa0_state_count == 1){
+        iiwa0_state_count = msg->header.seq;
+        //iiwa0_reached = msg->iiwaReached;
+        //iiwa0_connected = msg->iiwaConnected;
+
+        //for(int i = 0; i < 7; i++){
+        //    iiwa0_currJoints[i] = msg->jointState.data[i];
+        //}
+
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                    iiwa0_currentMartix4d(i,j) = msg->transform.data[4*i+j];
+            }
+        }
+        for (int i = 0; i <3; i++){
+            iiwa0_currentMartix4d(3,i) = 0;
+        }
+        iiwa0_currentMartix4d(3,3) = 1;
+
+        iiwa0_currentTransformd = Functions::Eigen2Erl(iiwa0_currentMartix4d);
+        iiwa0_msrTransform_received = true;
+    }
+}
+void KukaMotionPlanning::posCallback_iiwa1_state(const iiwa_test::iiwaState::ConstPtr& msg){
+    if (msg->header.seq-iiwa1_state_count == 1){
+        iiwa1_state_count = msg->header.seq;
+        //iiwa1_reached = msg->iiwaReached;
+        //iiwa1_connected = msg->iiwaConnected;
+
+        //for(int i = 0; i < 7; i++){
+        //    iiwa1_currJoints[i] = msg->jointState.data[i];
+        //}
+
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                    iiwa1_currentMartix4d(i,j) =  msg->transform.data[4*i+j];
+            }
+        }
+        for (int i = 0; i <3; i++){
+            iiwa1_currentMartix4d(3,i) = 0;
+        }
+        iiwa1_currentMartix4d(3,3) = 1;
+
+        iiwa1_currentTransformd = Functions::Eigen2Erl(iiwa1_currentMartix4d);
+        iiwa1_msrTransform_received = true;
+    }
+}
+
+
+void KukaMotionPlanning::posCallback_iiwa0_connected(const std_msgs::Bool::ConstPtr& msg){
+	//TODO
+	//if (msg->data!=NULL)
+	iiwa0_connected = msg->data;
+	cout<<iiwa0_connected<<endl;
+}
+void KukaMotionPlanning::posCallback_iiwa1_connected(const std_msgs::Bool::ConstPtr& msg){
+	//TODO
+	//if (msg->data!=NULL)
+	iiwa1_connected = msg->data;
+}
+
+void KukaMotionPlanning::posCallback_iiwa0_reached(const std_msgs::Bool::ConstPtr& msg){
+	//TODO
+	iiwa0_reached = msg->data;
+}
+void KukaMotionPlanning::posCallback_iiwa1_reached(const std_msgs::Bool::ConstPtr& msg){
+	//TODO
+    iiwa1_reached = (bool)msg->data;
+    //cout<<"iiwa1_reached "<<(bool)msg->data<<endl;
+}
+
+
+void KukaMotionPlanning::posCallback_exotica_complete(const std_msgs::Bool::ConstPtr& msg){
+	//TODO
+    exotica_complete = (bool)msg->data;
+}
+
+
+
+
+
 KukaMotionPlanning::KukaMotionPlanning()
 {
 
@@ -27,25 +174,58 @@ KukaMotionPlanning::KukaMotionPlanning()
     fname_ee_robpos = strdup((SRC_FILES_DIR+"VisionSystem/caliInfo/test/eeRobotPosture.txt").c_str());
     fname_robotJoints0 = "Data/RobotJoint0.txt";
 
-
+    //initialise ros and setup nodes
+    std::map<std::string, std::string> remaps;
+    remaps["__name"] = "iiwa_visual_servoing";
+    ros::init(remaps,"iiwa_visual_servoing");
+    ros::NodeHandle nh;
+	
+	//publisher 
+	pub_iiwa0_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa0_desiredEEInRob", 100, true);
+    pub_iiwa0_desiredEEInRob_sent = nh.advertise<std_msgs::Bool>("iiwa0_desiredEEInRob_sent", 100, true);
+	//pub_iiwa0_reached = nh.advertise<std_msgs::Bool>("iiwa0_reachead", 100);
+	pub_iiwa1_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa1_desiredEEInRob", 100, true);
+    pub_iiwa1_desiredEEInRob_sent = nh.advertise<std_msgs::Bool>("iiwa1_desiredEEInRob_sent", 100, true);
+	//pub_iiwa1_reached = nh.advertise<std_msgs::Bool>("iiwa1_reachead", 100);
+	//pub_exotica_complete = nh.advertise<std_msgs::Bool>("exotica_complete", 100);
+	//pub_iiwa1_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa1_desiredEEInRob", 100);
+	
+	
+	//subscriber 
+    sub_iiwa0_state = nh.subscribe("iiwa0_msrTransform", 1000, &KukaMotionPlanning::posCallback_iiwa0_state,this);
+    sub_iiwa0_reached = nh.subscribe("iiwa0_reached", 1000, &KukaMotionPlanning::posCallback_iiwa0_reached,this);
+	sub_iiwa0_connected = nh.subscribe("iiwa0_connected", 1000, &KukaMotionPlanning::posCallback_iiwa0_connected,this);
+	//sub_iiwa0_currJoints = nh.subscribe("iiwa0_currJoints", 1000, &KukaMotionPlanning::posCallback_iiwa0_currJoints,this);
+    sub_iiwa1_state = nh.subscribe("iiwa1_msrTransform", 1000, &KukaMotionPlanning::posCallback_iiwa1_state,this);
+    sub_iiwa1_reached = nh.subscribe("iiwa1_reached", 1000, &KukaMotionPlanning::posCallback_iiwa1_reached,this);
+	sub_iiwa1_connected = nh.subscribe("iiwa1_connected", 1000, &KukaMotionPlanning::posCallback_iiwa1_connected,this);
+	//sub_iiwa1_currJoints = nh.subscribe("iiwa1_currJoints", 1000, &KukaMotionPlanning::posCallback_iiwa1_currJoints,this);
+    sub_exotica_complete = nh.subscribe("exotica_complete", 1, &KukaMotionPlanning::posCallback_exotica_complete,this);
+	
+	srand(time(0));
+	ros::Rate rate(10);
     //iiwa
 #ifdef iiwaOn
-    iiwaControl *tmp0 = new iiwaControl(0);
-    iiwas.push_back(tmp0);
-
-    if (iiwas[0]->iiwaConnected == true)
+    //iiwaControl *tmp0 = new iiwaControl(0);
+    //iiwas.push_back(tmp0);
+	//rate.sleep();
+	ros::spinOnce();
+	cout<<iiwa0_connected<<endl;
+	if (iiwa0_connected == true)	
+    //if (iiwas[0]->iiwaConnected == true)
     {
-        iiwas[0]->start(QThread::TimeCriticalPriority);
+        //iiwas[0]->start(QThread::TimeCriticalPriority);
         cout << "iiwas 0 is connected!" << endl;
     }
     else
         cout << "iiwa 0 is NOT connected!" << endl;
 
-    iiwaControl *tmp1 = new iiwaControl(1);
-    iiwas.push_back(tmp1);
-    if (iiwas[1]->iiwaConnected == true)
+    //iiwaControl *tmp1 = new iiwaControl(1);
+    //iiwas.push_back(tmp1);
+    if (iiwa1_connected == true)
+    //if (iiwas[1]->iiwaConnected == true)
     {
-        iiwas[1]->start(QThread::TimeCriticalPriority);
+        //iiwas[1]->start(QThread::TimeCriticalPriority);
         cout << "iiwas 1 is connected!" << endl;
     }
     else
@@ -421,7 +601,7 @@ void KukaMotionPlanning:: calibRobot()
 void KukaMotionPlanning:: pathPlanning()
 {
     ////////////////////////////////////////
-    static int RunRobotIndex = 0;
+    static int RunRobotIndex = 1;
     static int status = 20;
     /*
      * 20: bimanual: read & plot trajectory     *
@@ -455,16 +635,20 @@ void KukaMotionPlanning:: pathPlanning()
     if (RunRobotIndex == 0)
     {
         //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-03-04-14-30.txt_smooth_quat_driver_inv_inserted";
-				//trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-21-18-28.txt_smooth_quat"; //for iiwa0
-				//trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
-				trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
-				//trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat"; //for iiwa1
+        //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-21-18-28.txt_smooth_quat"; //for iiwa0
+
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
+        //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat"; //for iiwa1
 
     }
     else if (RunRobotIndex == 1)
     {
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat").c_str());
-				trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
     }
     else if (RunRobotIndex == 2)
     {
@@ -484,10 +668,13 @@ void KukaMotionPlanning:: pathPlanning()
     if (status == 20)
     {// For sewing: bimanual, read trajectories
         cout << "Status = 20!" << endl;
-//        myTracker->DrawTool = true;
 
         readToolsTrajinMandrelandDrivers(0, EEInRobot_0, traj_ToolLInMan, traj_DriverL, fname_cHr0, fname_eeHl, trajectFile);
         readToolsTrajinMandrelandDrivers(1, EEInRobot_1, traj_ToolRInMan, traj_DriverR, fname_cHr1, fname_eeHr, trajectFile);
+        cout<<"status = 20 traj_ToolRInMan[0] ";
+        traj_ToolRInMan[0].print();
+        cout<<"status = 20 EEInRobot_1 ";
+        EEInRobot_1[0].print();
 
         // Plot trajectory -------------------------
         {
@@ -504,10 +691,10 @@ void KukaMotionPlanning:: pathPlanning()
                 myTracker->toolRTraj_tvec.push_back(toolR_traj[i]);
                 myTracker->toolLTraj_rvec.push_back(toolL_rvec[i]);
                 myTracker->toolRTraj_rvec.push_back(toolR_rvec[i]);
-								//cout << i << ": " << myTracker->toolLTraj_tvec[i].x << endl; 
+                //cout << i << ": " << myTracker->toolLTraj_tvec[i].x << endl;
             }
 
-						cout<<"Reading " << man_traj.size() << " data points!" <<endl;
+            cout<<"Reading " << man_traj.size() << " data points!" <<endl;
             cout << "man_traj " << man_traj[0] << endl;
             cout << "cHm " << cHm << endl;
         }
@@ -548,32 +735,38 @@ void KukaMotionPlanning:: pathPlanning()
 
         #endif
 
-						if(iiwas[0]->iiwaConnected == true || iiwas[1]->iiwaConnected == true)
-						{
-												if (RunRobotIndex == 0 || RunRobotIndex == 2)
-												{
-												    status = 21;
-												    cout << "Status = " <<status << " !"<< endl;
-												    cout << "Robots 0 start moving to initial pose!" << endl;
-												}
-												else if (RunRobotIndex == 1 )
-												{
-												    status = 22;
-												    cout << "Status = " <<status << " !"<< endl;
-												    cout << "Robots 1 start moving to initial pose!" << endl;
-												}
-												else
-												{
-												    status = 100;
-												    cout << "Status = " <<status << " !"<< endl;
-												}
-						}
-						else
-						{
-								cout<<"iiwa 0 and 1 are not connected"<<endl;
-								status = 100;
-						    cout << "Status = " <<status << " !"<< endl;
-						}
+            //if(iiwas[0]->iiwaConnected == true || iiwas[1]->iiwaConnected == true)
+            ros::spinOnce();
+            //iiwa0_connected = true;//////////////////////////////delete
+            cout<<"iiwa0 connected "<<iiwa0_connected<<endl;
+            if(iiwa0_connected || iiwa1_connected)
+            {
+                if (RunRobotIndex == 0 || RunRobotIndex == 2)
+                {
+                    status = 21;
+                    cout << "Status = " <<status << " !"<< endl;
+                    cout << "Robots 0 start moving to initial pose!" << endl;
+                }
+                else if (RunRobotIndex == 1 )
+                {
+                    status = 22;
+                    cout << "Status = " <<status << " !"<< endl;
+                    cout << "Robots 1 start moving to initial pose!" << endl;
+                }
+                else
+                {
+                    status = 100;
+                    cout << "Status = " <<status << " !"<< endl;
+                }
+            }
+            else
+            {
+                    cout<<"iiwa 0 and 1 are not connected"<<endl;
+                    status = 100;
+                    cout << "Status = " <<status << " !"<< endl;
+            }
+            //status = 100;
+            //cout << "Status = " <<status << " !"<< endl;
 
     }
 
@@ -582,10 +775,14 @@ void KukaMotionPlanning:: pathPlanning()
         // Move iiwa 0 to initial pose---------------------
         // Read initial pose in trajectory --------------
         robotPosture eeInrobot = EEInRobot_0[0];
-
-        cout << "iiwa 0 pose " << iiwas[0]->getiiwaPose().getX() << " " << iiwas[0]->getiiwaPose().getY() << " " << iiwas[0]->getiiwaPose().getZ() << " "
-                             << iiwas[0]->getiiwaPose().getQuaternion().w() << " " << iiwas[0]->getiiwaPose().getQuaternion().x() << " " << iiwas[0]->getiiwaPose().getQuaternion().y() << " " << iiwas[0]->getiiwaPose().getQuaternion().z()
-                             << endl;
+		ros::spinOnce();
+//        cout << "iiwa 0 pose " << iiwas[0]->getiiwaPose().getX() << " " << iiwas[0]->getiiwaPose().getY() << " " << iiwas[0]->getiiwaPose().getZ() << " "
+//                             << iiwas[0]->getiiwaPose().getQuaternion().w() << " " << iiwas[0]->getiiwaPose().getQuaternion().x() << " " << iiwas[0]->getiiwaPose().getQuaternion().y() << " " << iiwas[0]->getiiwaPose().getQuaternion().z()
+//                             << endl;
+		ros::spinOnce();
+        cout << "iiwa 0 pose " << iiwa0_currentTransformd.getX() << " " << iiwa0_currentTransformd.getY() << " " << iiwa0_currentTransformd.getZ() << " "
+                             << iiwa0_currentTransformd.getQuaternion().w() << " " << iiwa0_currentTransformd.getQuaternion().x() << " " << iiwa0_currentTransformd.getQuaternion().y() << " " << iiwa0_currentTransformd.getQuaternion().z()
+                             << endl;	
 
         cout << "EEInRobot0 [0] " << eeInrobot.getPosition().transpose() << " "
                                   << eeInrobot.getQuaternion().w() << " " << eeInrobot.getQuaternion().x() << " " << eeInrobot.getQuaternion().y() << " " << eeInrobot.getQuaternion().z()
@@ -594,13 +791,19 @@ void KukaMotionPlanning:: pathPlanning()
         // Move iiwa to initial pose ---------------
         Erl::Transformd iiwaTransformd = Functions::RobotPosture2ErlTransformd(eeInrobot);
 
-        cout << "iiwa0Current" << endl << iiwas[0]->getiiwaPose() << endl;
+        //cout << "iiwa0Current" << endl << iiwas[0]->getiiwaPose() << endl;
+        ros::spinOnce();
+        cout << "iiwa0Current" << endl << iiwa0_currentTransformd << endl;
         cout << "iiwa0Transformd" << endl << iiwaTransformd << endl;
 
 //        myTracker->DrawHandEye = true;
 
-        iiwas[0]->setiiwaPose(iiwaTransformd);
-        if (iiwas[0]->iiwaReached())
+		ros::spinOnce();
+        bool iiwa_reached = moveIiwa(0, iiwaTransformd);//move iiwa0 and check if rechead
+
+        //iiwas[0]->setiiwaPose(iiwaTransformd);
+        //if (iiwas[0]->iiwaReached())
+        if (iiwa_reached)
         {
             cout << "Robot 0 moved to camera view!" << endl;
             if (RunRobotIndex == 2)
@@ -627,9 +830,12 @@ void KukaMotionPlanning:: pathPlanning()
         // Read initial pose in trajectory --------------
         robotPosture eeInrobot = EEInRobot_1[0];
 
-        cout << "iiwa 1 pose " << iiwas[1]->getiiwaPose().getX() << " " << iiwas[1]->getiiwaPose().getY() << " " << iiwas[1]->getiiwaPose().getZ() << " "
-                             << iiwas[1]->getiiwaPose().getQuaternion().w() << " " << iiwas[1]->getiiwaPose().getQuaternion().x() << " " << iiwas[1]->getiiwaPose().getQuaternion().y() << " " << iiwas[1]->getiiwaPose().getQuaternion().z()
-                             << endl;
+//        cout << "iiwa 1 pose " << iiwas[1]->getiiwaPose().getX() << " " << iiwas[1]->getiiwaPose().getY() << " " << iiwas[1]->getiiwaPose().getZ() << " "
+//                             << iiwas[1]->getiiwaPose().getQuaternion().w() << " " << iiwas[1]->getiiwaPose().getQuaternion().x() << " " << iiwas[1]->getiiwaPose().getQuaternion().y() << " " << iiwas[1]->getiiwaPose().getQuaternion().z()
+//                             << endl;
+		ros::spinOnce();
+        cout << "iiwa 1 pose " << iiwa1_currentTransformd.getX() << " " << iiwa1_currentTransformd.getY() << " " << iiwa1_currentTransformd.getZ() << " "
+                             << iiwa1_currentTransformd.getQuaternion().w() << " " << iiwa1_currentTransformd.getQuaternion().x() << " " << iiwa1_currentTransformd.getQuaternion().y() << " " << iiwa1_currentTransformd.getQuaternion().z()<< endl;	
 
         cout << "EEInRobot1 [0] " << eeInrobot.getPosition().transpose() << " "
                                   << eeInrobot.getQuaternion().w() << " " << eeInrobot.getQuaternion().x() << " " << eeInrobot.getQuaternion().y() << " " << eeInrobot.getQuaternion().z()
@@ -638,18 +844,27 @@ void KukaMotionPlanning:: pathPlanning()
         // Move iiwa to initial pose ---------------
         Erl::Transformd iiwaTransformd = Functions::RobotPosture2ErlTransformd(eeInrobot);
 
-        cout << "iiwa1Current" << endl << iiwas[1]->getiiwaPose() << endl;
+		ros::spinOnce();
+        //cout << "iiwa1Current" << endl << iiwas[1]->getiiwaPose() << endl;
+        cout << "iiwa1Current" << endl << iiwa1_currentTransformd << endl;
         cout << "iiwa1Transformd" << endl << iiwaTransformd << endl;
 
 //        myTracker->DrawHandEye = true;
 
-        iiwas[1]->setiiwaPose(iiwaTransformd);
-        if (iiwas[1]->iiwaReached())
+		ros::spinOnce();
+        //cout<<"iiwa reached "<<iiwa1_reached<<" exotica complete "<<exotica_complete<<endl;
+        bool iiwa_reached = moveIiwa(1, iiwaTransformd);//move iiwa0 and check if rechead
+
+        //iiwas[1]->setiiwaPose(iiwaTransformd);
+        //if (iiwas[1]->iiwaReached())
+        if(iiwa_reached)
         {
             cout << "Robot 1 moved to camera view!" << endl;
             status = 23; //23
             cout << "Status = " <<status << " !"<< endl;
+
         }
+
     }
 
     else if(status == 23)
@@ -707,10 +922,34 @@ void KukaMotionPlanning:: pathPlanning()
 
         //////////////////////////////////////////////
 
+        // Draw hand eye result -------------------------------------------------
+        Matrix4d robInCameraFrame, eeInRobFrame, markerInRobFrame;
+        ros::spinOnce();
+        if (RunRobotIndex == 0)
+        {
+            robInCameraFrame = rob0inCam_mat4d;
+            eeInRobFrame = iiwa0_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolLInEE;
+        }
+        if (RunRobotIndex == 1)
+        {
+            robInCameraFrame = rob1inCam_mat4d;
+            eeInRobFrame = iiwa1_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolRInEE;
+        }
+        Matrix4d markerInCamFrame_handeye = robInCameraFrame * markerInRobFrame;
+        cv::Mat markerInHandEye =  Functions::Eigen2CVMat(markerInCamFrame_handeye);
+        cout << "markerInHandEye " << markerInHandEye  << endl;
+        myTracker->DrawHandEye = true;
+        markerInHandEye.copyTo(myTracker->markerInHandEye_updated);
+
         ///////// Compute intial pose /////////
+        cout<<"traj_ToolRInMan[0] ";
+        traj_ToolRInMan[0].print();
+        
         if (RunRobotIndex == 0 || RunRobotIndex == 2)
         {
-            EEInRobot_0[0] = visionGuidedIIWAMoveToInitialPosture(traj_ToolLInMan[0], traj_ToolLInMan[1], 0, rob0inCam_mat4d, toolLInEE, fname_eeHl);
+            EEInRobot_0[0] = visionGuidedIIWAMoveToInitialPosture(traj_ToolLInMan[0], 0, rob0inCam_mat4d, toolLInEE, fname_eeHl);
             cout << "Computed EEInRobot_0: " << EEInRobot_0[0].getPosition().transpose() <<
                                         " " << EEInRobot_0[0].getQuaternion().w() <<
                                         " " << EEInRobot_0[0].getQuaternion().x() <<
@@ -719,7 +958,8 @@ void KukaMotionPlanning:: pathPlanning()
         }
         if (RunRobotIndex == 1 || RunRobotIndex == 2)
         {
-            EEInRobot_1[0] = visionGuidedIIWAMoveToInitialPosture(traj_ToolRInMan[0], traj_ToolRInMan[1], 1, rob1inCam_mat4d, toolRInEE, fname_eeHr);
+            EEInRobot_1[0] = visionGuidedIIWAMoveToInitialPosture(traj_ToolRInMan[0], 1, rob1inCam_mat4d, toolRInEE, fname_eeHr);
+
             cout << "Computed EEInRobot_1: " << EEInRobot_1[0].getPosition().transpose() <<
                                          " " << EEInRobot_1[0].getQuaternion().w() <<
                                          " " << EEInRobot_1[0].getQuaternion().x() <<
@@ -754,15 +994,22 @@ void KukaMotionPlanning:: pathPlanning()
         // Move iiwa 0 to initial pose computed by hand-eye calibration
         Erl::Transformd iiwaTransformd = Functions::RobotPosture2ErlTransformd(EEInRobot_0[0]);
 
-        cout << "iiwaCurrent" << endl << iiwas[0]->getiiwaPose() << endl;
+		ros::spinOnce();
+        //cout << "iiwaCurrent" << endl << iiwas[0]->getiiwaPose() << endl;
+        cout << "iiwaCurrent" << endl << iiwa0_currentTransformd << endl;
         cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
 
-        iiwas[0]->setiiwaPose(iiwaTransformd);
-        if (iiwas[0]->iiwaReached())
+		ros::spinOnce();
+        bool iiwa_reached = moveIiwa(0, iiwaTransformd);//move iiwa0 and check if rechead
+        //iiwas[0]->setiiwaPose(iiwaTransformd);
+        //if (iiwas[0]->iiwaReached())
+        if (iiwa_reached)
         {
-						cout << "iiwas[0]->iiwaReached() " << iiwas[0]->iiwaReached() << endl;
+						//cout << "iiwas[0]->iiwaReached() " << iiwas[0]->iiwaReached() << endl;
+						cout << "iiwas[0]->iiwaReached() " << iiwa_reached << endl;
             cout << "Robot 0 finish moving to initial pose!" << endl;
-            cout << "iiwaFinished" << endl << iiwas[0]->getiiwaPose() << endl;
+            //cout << "iiwaFinished" << endl << iiwas[0]->getiiwaPose() << endl;
+            cout << "iiwaFinished" << endl << iiwa0_currentTransformd << endl;
             myTracker->bool_recordTime = true;
 
             if (RunRobotIndex == 0 )
@@ -794,18 +1041,24 @@ void KukaMotionPlanning:: pathPlanning()
         // Move iiwa 0 to initial pose computed by hand-eye calibration
         Erl::Transformd iiwaTransformd = Functions::RobotPosture2ErlTransformd(EEInRobot_1[0]);
 
-        cout << "iiwaCurrent" << endl << iiwas[1]->getiiwaPose() << endl;
+		ros::spinOnce();
+        //cout << "iiwaCurrent" << endl << iiwas[1]->getiiwaPose() << endl;
+        cout << "iiwaCurrent" << endl << iiwa1_currentTransformd << endl;
         cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
 
-        iiwas[1]->setiiwaPose(iiwaTransformd);
-        if (iiwas[1]->iiwaReached())
+		ros::spinOnce();
+        bool iiwa_reached = moveIiwa(1, iiwaTransformd);//move iiwa0 and check if rechead
+        //iiwas[1]->setiiwaPose(iiwaTransformd);
+        //if (iiwas[1]->iiwaReached())
+        if (iiwa_reached)
         {
             cout << "Robot 1 finish moving to initial pose!" << endl;
-            cout << "iiwaFinished" << endl << iiwas[1]->getiiwaPose() << endl;
+            //cout << "iiwaFinished" << endl << iiwas[1]->getiiwaPose() << endl;
+            cout << "iiwaFinished" << endl << iiwa1_currentTransformd << endl;
             myTracker->bool_recordTime = true;
 
-            status = 26;
-            cout << "Status = 26!"<< endl;
+            status = 26;//26
+            cout << "Status = "<<status <<" !"<< endl;
             recordRobotPose(traj_ToolLInMan, "traj_ToolLInMan_start.txt");
 
         }
@@ -855,25 +1108,61 @@ void KukaMotionPlanning:: pathPlanning()
         Matrix4d toolLInRobFrame, markerLInCamFrame_handeye, markerLInCamFrame_handeye_updated;
         Matrix4d toolRInRobFrame, markerRInCamFrame_handeye, markerRInCamFrame_handeye_updated;
 
+        // Draw hand eye result -------------------------------------------------
+        Matrix4d robInCameraFrame, eeInRobFrame, markerInRobFrame;
+        ros::spinOnce();
+        if (RunRobotIndex == 0)
+        {
+            robInCameraFrame = rob0inCam_mat4d;
+            eeInRobFrame = iiwa0_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolLInEE;
+        }
+        if (RunRobotIndex == 1)
+        {
+            robInCameraFrame = rob1inCam_mat4d;
+            eeInRobFrame = iiwa1_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolRInEE;
+        }
+        Matrix4d markerInCamFrame_handeye = robInCameraFrame * markerInRobFrame;
+        cv::Mat markerInHandEye =  Functions::Eigen2CVMat(markerInCamFrame_handeye);
+        cout << "markerInHandEye " << markerInHandEye  << endl;
+        myTracker->DrawHandEye = true;
+        markerInHandEye.copyTo(myTracker->markerInHandEye_updated);
+
+
+
         if (RunRobotIndex == 0)
         {
 //            toolLInRobFrame = readToolPoseInIIWAbase(0, fname_eeHl);
 //            markerLInCamFrame_handeye = rob0inCam_mat4d * toolLInRobFrame;
 //            markerLInCamFrame_handeye_updated = Functions::CVMat2Eigen(cHr0_updated)* toolLInRobFrame;
+            eeInRobFrame = iiwa0_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolLInEE;
+            markerLInCamFrame_handeye_updated = Functions::CVMat2Eigen(cHr0_updated)* markerInRobFrame;
         }
-        else
+        if (RunRobotIndex == 1)
         {
 //            toolRInRobFrame = readToolPoseInIIWAbase(1, fname_eeHr);
 //            markerRInCamFrame_handeye = rob1inCam_mat4d * toolRInRobFrame;
 //            markerRInCamFrame_handeye_updated = Functions::CVMat2Eigen(cHr1_updated)* toolRInRobFrame;
+            eeInRobFrame = iiwa1_currentMartix4d;
+            markerInRobFrame = eeInRobFrame * toolRInEE;
+            markerRInCamFrame_handeye_updated = Functions::CVMat2Eigen(cHr1_updated)* markerInRobFrame;
         }
 
-//        cv::Mat markerLInHandEye_updated = Functions::Eigen2CVMat(markerLInCamFrame_handeye_updated);
-//        cv::Mat markerRInHandEye_updated = Functions::Eigen2CVMat(markerRInCamFrame_handeye_updated);
+        cv::Mat markerLInHandEye_updated = Functions::Eigen2CVMat(markerLInCamFrame_handeye_updated);
+        cv::Mat markerRInHandEye_updated = Functions::Eigen2CVMat(markerRInCamFrame_handeye_updated);
 
         // Only print tool R hand eye -------
-//        myTracker->DrawHandEye = true;
-//        markerLInHandEye_updated.copyTo(myTracker->markerInHandEye_updated);
+        myTracker->DrawHandEye = true;
+        if (RunRobotIndex == 0)
+        {
+            markerLInHandEye_updated.copyTo(myTracker->markerInHandEye_updated);
+        }
+        if (RunRobotIndex == 1)
+        {
+            markerRInHandEye_updated.copyTo(myTracker->markerInHandEye_updated);
+        }
 
         // Record for hand eye -----------------------------------------------------
         aruco::Marker toolLtmp, toolRtmp;
@@ -937,8 +1226,10 @@ void KukaMotionPlanning:: pathPlanning()
             visionGuidedMoveToPosture_noVision(traj_ToolRInMan[0], traj_ToolRInMan[trajIndex], 1, rob1inCam_mat4d, toolRInEE, fname_eeHr, millisecbuffer, ms);
         }
 #else
-//        while(myTracker->toolsTracker->toolsDetected.size()>0 &&
-//              !(myTracker->toolsTracker->toolsDetected[0]))
+        cout<<"toolsDetected.size "<<myTracker->toolsTracker->toolsDetected.size()<<endl;
+        cout<<"toolsDetected[0] "<<myTracker->toolsTracker->toolsDetected[0]<<endl;
+        //while(myTracker->toolsTracker->toolsDetected.size()>0 &&
+        //      !(myTracker->toolsTracker->toolsDetected[0]))
 
 //        if (trajIndex%10==0)
         {
@@ -966,17 +1257,7 @@ void KukaMotionPlanning:: pathPlanning()
                 }
             }
         }
-//        else
-        {
-//            if (RunRobotIndex == 0 || RunRobotIndex == 2)
-//            {
-//                visionGuidedMoveToPosture_noVision_iiwa(traj_ToolLInMan[trajIndex_pre], traj_ToolLInMan[trajIndex], 0, rob0inCam_mat4d, toolLInEE, fname_eeHl, millisecbuffer, ms);
-//            }
-//            if (RunRobotIndex == 1 || RunRobotIndex == 2)
-//            {
-//                visionGuidedMoveToPosture_noVision_iiwa(traj_ToolRInMan[trajIndex_pre], traj_ToolRInMan[trajIndex], 1, rob1inCam_mat4d, toolRInEE, fname_eeHr, millisecbuffer, ms);
-//            }
-        }
+
 #endif
 
         cout << "trajIndex " << trajIndex << endl;
@@ -1318,6 +1599,9 @@ bool KukaMotionPlanning::readToolsTrajinMandrelandDrivers(int robotIndex,
         }
     }
 
+    cout<<"traj_ToolInMan from readToolsTrajinMandrelandDrivers"<<endl<<traj_ToolInMan[0].getPosition()<<" "<<traj_ToolInMan[0].getQuaternion().w()<<" "<<traj_ToolInMan[0].getQuaternion().x()<<" "<<traj_ToolInMan[0].getQuaternion().y()<<" "<<traj_ToolInMan[0].getQuaternion().z()<<" "<<endl;
+
+
     // HARDCODE
     //traj_ToolInMan[0].getPosition()[2] = 0.05;
 
@@ -1347,10 +1631,21 @@ bool KukaMotionPlanning::readToolsTrajinMandrelandDrivers(int robotIndex,
     //////////// Compute initial pose ////////////////
     // Compute robot trajectory in robot frame, according to learnt trajectory in mandrel frame --------------
     vector<robotPosture> traj_toolInRobot;
+
     mandrelInRobFrame = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame);
     tranTool2Robot(mandrelInRobFrame, traj_ToolInMan, traj_toolInRobot);
     tranToolInRob2NeeldeInRob(toolInEE, traj_toolInRobot, EEInRobot);
+///////////////
+    cout<<"------------------------------------------------"<<endl;
+    cout<<"mandrelInRobFrame_org"<<endl<<mandrelInRobFrame<<endl;
+/////////////
 
+//////////
+    cout<<"tHc"<<endl<<Functions::CVMat2Eigen(toolInCamFrame).inverse()<<endl;
+    cout<<"tHm"<<endl<<Functions::CVMat2Eigen(toolInCamFrame).inverse()* Functions::CVMat2Eigen(mandrelInCamFrame)<<endl;
+
+
+ /////////////////
     Matrix4d toolInMan;
     toolInMan = Functions::CVMat2Eigen(mandrelInCamFrame).inverse() * Functions::CVMat2Eigen(toolInCamFrame);
 }
@@ -1649,340 +1944,6 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_newvision(robotPosture curren
 
 
 
-
-bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision(robotPosture currentToolInMan,
-                                                   robotPosture targetToolInMan, int robotIndex,
-                                                   Matrix4d robInCameraFrame,
-                                                   Matrix4d toolInEE, char *toolFile,
-                                                   char *millisecbuffer, int ms)
-{
-    cv::Mat mandrelInCamFrame, toolInCamFrame;
-    Matrix4d toolInRobFrame, desiredToolInRob, deltaToolInRob, desiredEEInRob;
-    robotPosture EEInRob_robpose;
-    float speedlimit;
-
-    ///////////////// Read current mandrel and tool poses /////////////////
-    aruco::Marker man, tool;
-    myTracker->toolsTracker->Tools[0].Tvec.copyTo(man.Tvec);
-    myTracker->toolsTracker->Tools[0].Rvec.copyTo(man.Rvec);
-    man.id = myTracker->toolsTracker->Tools[0].id;
-    myTracker->toolsTracker->Tools[robotIndex+1].Tvec.copyTo(tool.Tvec);
-    myTracker->toolsTracker->Tools[robotIndex+1].Rvec.copyTo(tool.Rvec);
-    tool.id = myTracker->toolsTracker->Tools[robotIndex+1].id;
-
-    myTracker->toolsTracker->toolPose2cvTrans(man, mandrelInCamFrame);
-    mandrelInCamFrame.convertTo(mandrelInCamFrame, CV_64F);
-
-    // ======== HARDCODE TO FIXED POSITION =======================
-    manInCam_ini.copyTo(mandrelInCamFrame);
-    // ===========================================================
-
-    myTracker->toolsTracker->toolPose2cvTrans(tool, toolInCamFrame);
-    toolInCamFrame.convertTo(toolInCamFrame, CV_64F);
-
-    // Read current tool position in robot
-    toolInRobFrame = readToolPoseInIIWAbase(robotIndex, toolFile);
-
-
-    // Record current position detected by camera ------------------------------
-    for(int k=0; k<3; k++)
-    {
-        toolsInCam << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[0] << " "
-                   << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[1] << " "
-                   << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[2] << " "
-                   << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[0] << " "
-                   << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[1] << " "
-                   << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[2] << " ";
-    }
-
-    toolsInCam << myTracker->toolsTracker->Tools[0].id << " "
-               << myTracker->toolsTracker->Tools[1].id << " "
-               << myTracker->toolsTracker->Tools[2].id << " ";
-
-
-    /////////////// Compute next desired EE pose in robot /////////////////
-
-#ifdef SimulationON
-    speedlimit = 0.5;
-    desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                       Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-    desiredToolInRob = deltaToolInRob * toolInRobFrame;
-    cout << "deltaToolInRob " << robotIndex << " kalman simulation: " <<endl;
-#else
-    speedlimit = 0.05;
-    Marker tmpMarker;
-
-    if (mandrelInCamFrame.at<double>(0,3) != -1000 && toolInCamFrame.at<double>(0,3) != -1000
-            && tool.Tvec.ptr<float>(0)[0] != -1000)
-    {
-        cout << "Before computer filter " << endl;
-        /// *************kalmanfilter******************************
-        ///
-        ///
-        ///
-        /// -------------------------------------------------------
-        ///
-        ///
-        cv::Mat x_k(6,1, CV_64F), z_k(6,1, CV_64F), x_k_kal(6,1, CV_64F);
-        cv::Mat x_k_rot, z_k_rot;
-        cv::Mat x_k_mat, z_k_mat, x_k_kal_mat;
-        Matrix4d toolInRobFrame_preL, x_k_mat4d, z_k_mat4d;
-        Matrix3d x_k_rotmat3d, z_k_rotmat3d;
-        Quaterniond x_k_quat, z_k_quat, x_k_kal_quat;
-        //Marker tmpMarker;
-        Vector3d x_k_euler3d, z_k_euler3d;
-        cv::Vec3d x_k_euler, z_k_euler;
-
-        int index = cnt_robothist + 1;
-        if (index == hist_EEInRobotBase.size())
-            index = 0;
-        //toolInRobFrame_preL = Functions::convertRobotPosture2HomoMatrix(hist_EEInRobotBase[index]) * toolInEE;
-
-            x_k_mat4d = Functions::CVMat2Eigen(mandrelInCamFrame) *
-                        Functions::convertRobotPosture2HomoMatrix(currentToolInMan);
-//        x_k_mat4d = robInCameraFrame * toolInRobFrame;
-//        z_k_mat4d = Functions::CVMat2Eigen(toolInCamFrame)*
-//                      toolInRobFrame_preL.inverse() *
-//                      toolInRobFrame;
-        z_k_mat4d = Functions::CVMat2Eigen(toolInCamFrame);
-
-        x_k_quat = Functions::Rot2Quaternion(x_k_mat4d);
-        z_k_quat = Functions::Rot2Quaternion(z_k_mat4d);
-
-        x_k_mat = Functions::Eigen2CVMat(x_k_mat4d);
-        z_k_mat = Functions::Eigen2CVMat(z_k_mat4d);
-
-        x_k_rot = x_k_mat.colRange(0,3).rowRange(0,3);
-        z_k_rot = z_k_mat.colRange(0,3).rowRange(0,3);
-
-//        cout << "x_k_mat " << x_k_mat << endl;
-//        cout << "z_k_mat " << z_k_mat << endl;
-//        cout << "toolInCamFrame " << toolInCamFrame << endl;
-//        cout << "toolInRobFrame_preL " << toolInRobFrame_preL << endl;
-//        cout << "toolInRobFrame " << toolInRobFrame << endl;
-
-        myTracker->toolsTracker->cvTrans2toolPose(x_k_mat, tmpMarker);
-
-//        cout << "tmpMarker " << tmpMarker.Tvec.ptr<float>(0)[0] << " "
-//                             << tmpMarker.Tvec.ptr<float>(0)[1] << " "
-//                             << tmpMarker.Tvec.ptr<float>(0)[2] << " "
-//                             << tmpMarker.Rvec.ptr<float>(0)[0] << " "
-//                             << tmpMarker.Rvec.ptr<float>(0)[1] << " "
-//                             << tmpMarker.Rvec.ptr<float>(0)[2] << endl;
-
-        x_k.at<double>(0,0) = tmpMarker.Tvec.ptr<float>(0)[0];
-        x_k.at<double>(1,0) = tmpMarker.Tvec.ptr<float>(0)[1];
-        x_k.at<double>(2,0) = tmpMarker.Tvec.ptr<float>(0)[2];
-        x_k.at<double>(3,0) = tmpMarker.Rvec.ptr<float>(0)[0];
-        x_k.at<double>(4,0) = tmpMarker.Rvec.ptr<float>(0)[1];
-        x_k.at<double>(5,0) = tmpMarker.Rvec.ptr<float>(0)[2];
-
-        myTracker->toolsTracker->cvTrans2toolPose(z_k_mat, tmpMarker);
-        z_k.at<double>(0,0) = tmpMarker.Tvec.ptr<float>(0)[0];
-        z_k.at<double>(1,0) = tmpMarker.Tvec.ptr<float>(0)[1];
-        z_k.at<double>(2,0) = tmpMarker.Tvec.ptr<float>(0)[2];
-        z_k.at<double>(3,0) = tmpMarker.Rvec.ptr<float>(0)[0];
-        z_k.at<double>(4,0) = tmpMarker.Rvec.ptr<float>(0)[1];
-        z_k.at<double>(5,0) = tmpMarker.Rvec.ptr<float>(0)[2];
-
-
-//        cout << "x_k_rot " << x_k_rot << endl;
-//        cout << "z_k_rot " << z_k_rot << endl;
-
-        x_k_euler = Functions::rotationMatrixToEulerAngles(x_k_rot);
-        z_k_euler = Functions::rotationMatrixToEulerAngles(z_k_rot);
-
-        for (int a=0; a<3; a++)
-        {
-            if (x_k_euler[a] - z_k_euler[a] > 5)
-            {
-                z_k_euler[a] = z_k_euler[a] + 2 * M_PI  ;
-            }
-            if (x_k_euler[a] - z_k_euler[a] < -5)
-            {
-                x_k_euler[a] = x_k_euler[a] + 2 * M_PI  ;
-            }
-        }
-
-//        cout << "x_k_euler " << x_k_euler << endl;
-//        cout << "z_k_euler " << z_k_euler << endl;
-
-        x_k.at<double>(3,0) = x_k_euler[0];
-        x_k.at<double>(4,0) = x_k_euler[1];
-        x_k.at<double>(5,0) = x_k_euler[2];
-        z_k.at<double>(3,0) = z_k_euler[0];
-        z_k.at<double>(4,0) = z_k_euler[1];
-        z_k.at<double>(5,0) = z_k_euler[2];
-
-//        cout << "x_k " << x_k << endl;
-//        cout << "z_k " << z_k << endl;
-
-        P_kalman = P_kalman + Q_kalman;
-        P_kalman = P_kalman - K_kalman*P_kalman;
-        K_kalman = P_kalman/(P_kalman+R_kalman);
-
-        x_k_kal = x_k + K_kalman *(z_k - x_k);
-
-////         Test Only Compensate for latency--------------
-////        x_k_kal = z_k;
-
-//        cout << "K " << K_kalman << endl;
-//        cout << "P " << P_kalman << endl;
-//        cout << "x_k_kal " << x_k_kal << endl;
-
-        tmpMarker.Tvec.ptr<float>(0)[0] = x_k_kal.at<double>(0,0);
-        tmpMarker.Tvec.ptr<float>(0)[1] = x_k_kal.at<double>(1,0);
-        tmpMarker.Tvec.ptr<float>(0)[2] = x_k_kal.at<double>(2,0);
-        tmpMarker.Rvec.ptr<float>(0)[0] = x_k_kal.at<double>(3,0);
-        tmpMarker.Rvec.ptr<float>(0)[1] = x_k_kal.at<double>(4,0);
-        tmpMarker.Rvec.ptr<float>(0)[2] = x_k_kal.at<double>(5,0);
-
-        myTracker->toolsTracker->toolPose2cvTrans(tmpMarker, x_k_kal_mat);
-
-    //    // Test Quaternion --------------------------
-    //    x_k_kal_quat = Functions::slerp(z_k_quat, x_k_quat, K_kalman.at<double>(3,3));
-    //    Matrix3d tmpRot = x_k_kal_quat.toRotationMatrix();
-    //    Functions::Eigen2CVMat(tmpRot).copyTo(x_k_kal_mat.colRange(0,3).rowRange(0,3));
-    //    // -------------------------------
-
-        // Test Euler angles ----------------------------
-        x_k_euler[0] = x_k_kal.at<double>(3,0);
-        x_k_euler[1] = x_k_kal.at<double>(4,0);
-        x_k_euler[2] = x_k_kal.at<double>(5,0);
-        Functions::eulerAnglesToRotationMatrix(x_k_euler).copyTo(x_k_kal_mat.colRange(0,3).rowRange(0,3));
-
-        x_k_kal_mat.convertTo(x_k_kal_mat,CV_64F);
-        x_k_kal_mat.copyTo(myTracker->markerInHandEye);
-        cout << "x_k_kal_mat: " << x_k_kal_mat << endl;
-        cout << "toolInCamFrame " << toolInCamFrame << endl;
-        /// ******************************************************************************
-        ///
-        ///
-
-        robInCameraFrame = Functions::CVMat2Eigen(x_k_kal_mat) * toolInRobFrame.inverse();
-        desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                           Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-        cout << "deltaToolInRob " << robotIndex << " kalman vision: " << endl;
-
-        UpdateHandEye(Functions::convertHomoMatrix2RobotPosture(robInCameraFrame), robotIndex);
-    }
-    else
-    {
-        if (robotIndex == 0)
-        {
-            robInCameraFrame = Functions::CVMat2Eigen(cHr0_updated);
-        }
-        if (robotIndex == 1)
-        {
-            robInCameraFrame = Functions::CVMat2Eigen(cHr1_updated);
-        }
-        desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                           Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-
-        cout << "deltaToolInRob " << robotIndex << " no detect kalman: " << endl;
-    }
-#endif
-
-    desiredEEInRob = desiredToolInRob * toolInEE.inverse();
-    Matrix4d deltaT = toolInRobFrame.inverse() * desiredToolInRob;
-    cout << deltaT << endl;
-    cout << "toolInRobFrame " << endl << toolInRobFrame << endl;
-    cout << "robInCameraFrame " << endl << robInCameraFrame << endl;
-    cout << "mandrelInCamFrame " << endl << mandrelInCamFrame << endl;
-    cout << "targetToolInMan " << endl << Functions::convertRobotPosture2HomoMatrix(targetToolInMan) << endl;
-
-//    while (abs(deltaT(0,3)) > speedlimit || abs(deltaT(1,3)) > speedlimit||abs(deltaT(2,3)) > speedlimit)
-//    {
-//        cout << "visionGuidedMoveToPosture_kalmanvision: Too large velocity. " <<deltaT(0,3) << " " << deltaT(1,3) <<
-//                " " << deltaT(2,3) << " Stop!" << endl;
-//        msleep(500);
-//    }
-
-    EEInRob_robpose = Functions::convertHomoMatrix2RobotPosture(desiredEEInRob);
-    Matrix4d EEInRobCurr= dualArmPlanner->getRobotInstance(robotIndex)->getHomoMatrix();
-    robotPosture EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(EEInRobCurr);
-
-    if (EEInRobCurrPose.getQuaternion().dot(
-                EEInRob_robpose.getQuaternion()) < 0)
-    {
-        EEInRob_robpose.getQuaternion().w() *= -1;
-        EEInRob_robpose.getQuaternion().x() *= -1;
-        EEInRob_robpose.getQuaternion().y() *= -1;
-        EEInRob_robpose.getQuaternion().z() *= -1;
-        cout << "EEInRob inverse!"<< endl;
-    }
-//    cout << "Before setDesTipPosture " <<endl;
-    cout << "EEInRobCurr " << endl << EEInRobCurr << endl;
-    cout << "EEInRob " << endl << Functions::convertRobotPosture2HomoMatrix(EEInRob_robpose) << endl;
-
-
-//*********** Move robot *******************************
-//    moveToEEPose_QuatSave(robotIndex, EEInRob_robpose);
-    //setDesTipPosture_Kalman(EEInRob_robpose, robotIndex);
-    dualArmPlanner->setDesTipPosture(EEInRob_robpose, robotIndex);
-    msleep(ROBOTSLEEP);
-//    cout << "after setDesTipPosture " << endl;
-// *****************************************************
-
-
-//#ifdef SimulationON
-//#else
-//       // Save command ------------------------------------
-//       //Matrix4d eeInRobByCam = robInCameraFrame.inverse() * Functions::CVMat2Eigen(toolLInCamFrame) * toolLInEE.inverse();
-//       Matrix4d eeInRobDesired_mat4d = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-//                                       Functions::convertRobotPosture2HomoMatrix(targetToolInMan)
-//                                       * toolInEE.inverse();
-//       robotPosture eeInRobDesired = Functions::convertHomoMatrix2RobotPosture(eeInRobDesired_mat4d);
-
-//       // Update robot current pose -----------------------------
-
-//       fEEInRobots << EEInRobCurrPose.getPosition().transpose()
-//                   << " " << EEInRobCurrPose.getQuaternion().w()
-//                   << " " << EEInRobCurrPose.getQuaternion().x()
-//                   << " " << EEInRobCurrPose.getQuaternion().y()
-//                   << " " << EEInRobCurrPose.getQuaternion().z()
-//                   << " ";
-//       fEEInRobots << EEInRob_robpose.getPosition().transpose()
-//                   << " " << EEInRob_robpose.getQuaternion().w()
-//                   << " " << EEInRob_robpose.getQuaternion().x()
-//                   << " " << EEInRob_robpose.getQuaternion().y()
-//                   << " " << EEInRob_robpose.getQuaternion().z()
-//                   << " " << millisecbuffer << ms
-//                   << " ";
-
-//       EEInRobCurr= dualArmPlanner->getRobotInstance(robotIndex)->getHomoMatrix();
-//       EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(EEInRobCurr);
-
-//       fEEInRobots << EEInRobCurrPose.getPosition().transpose()
-//                   << " " << EEInRobCurrPose.getQuaternion().w()
-//                   << " " << EEInRobCurrPose.getQuaternion().x()
-//                   << " " << EEInRobCurrPose.getQuaternion().y()
-//                   << " " << EEInRobCurrPose.getQuaternion().z()
-//                   << endl;
-
-//       // Dectect marker after moving ------------------------------------
-//       for(int k=0; k<3; k++)
-//       {
-//           toolsInCam << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[0] << " "
-//                      << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[1] << " "
-//                      << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[2] << " "
-//                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[0] << " "
-//                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[1] << " "
-//                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[2] << " ";
-//       }
-//       toolsInCam << millisecbuffer << ms << " ";
-
-//       toolsInCam << tmpMarker.Tvec.ptr<float>(0)[0] << " "
-//                  << tmpMarker.Tvec.ptr<float>(0)[1] << " "
-//                  << tmpMarker.Tvec.ptr<float>(0)[2] << " "
-//                  << tmpMarker.Rvec.ptr<float>(0)[0] << " "
-//                  << tmpMarker.Rvec.ptr<float>(0)[1] << " "
-//                  << tmpMarker.Rvec.ptr<float>(0)[2] << " "
-//                  << endl;
-//       //-------------------------------------------------
-//#endif
-}
-
 bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPosture currentToolInMan,
                                                    robotPosture targetToolInMan, int robotIndex,
                                                    Matrix4d robInCameraFrame,
@@ -2212,30 +2173,32 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
     Erl::Transformd iiwaTransformd = Functions::Eigen2Erl(desiredEEInRob);
     fEEInRobots << iiwaTransformd << endl;
 
-    cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
+    //cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
+    ros::spinOnce();
+    if (robotIndex == 0)
+    {
+    	cout << "iiwa0Current" << endl << iiwa0_currentTransformd << endl;
+    }else if (robotIndex == 1)
+    {
+    	cout << "iiwa1Current" << endl << iiwa1_currentTransformd << endl;
+    }
+    
     cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
     cout << "matrix 4d" << endl << desiredEEInRob<<endl;
 
-    //ros publish iiwaTransformd
-    std_msgs::Float64MultiArray msg;
-    for (int i = 0; i<3; i++){
-        for (int j = 0; j<4; j++){
-                msg.data.push_back(desiredEEInRob(i,j));
-        }
-    }
-    pub_iiwa0_desiredEEInRob.publish(msg);
-    //rate.sleep();
+    //move iiwa
+    moveIiwa(robotIndex,iiwaTransformd);
 
+	
 
 
 //*********** Move robot *******************************
-/*#ifdef iiwaOn
+#ifdef iiwaOn
     iiwas[robotIndex]->setiiwaPose(iiwaTransformd);
     while(!iiwas[robotIndex]->iiwaReached())
     {
     }
 #endif
-*/
 // *****************************************************
 
 #ifdef SimulationON
@@ -2295,11 +2258,11 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
        //-------------------------------------------------
 
 			// Get Kuka current Joints
-			Eigen::Matrix<double, 7, 1> currJoints = iiwas[robotIndex]->iiwa.getJoints();
+/*			Eigen::Matrix<double, 7, 1> currJoints = iiwas[robotIndex]->iiwa.getJoints();
 			fKukaJointsTraj << currJoints[0] << " " << currJoints[1] << " " << currJoints[2] << " "
 											<< currJoints[3] << " " << currJoints[4] << " " << currJoints[5] << " "
 											<< currJoints[6] <<endl;
-			
+*/			
 #endif
 
 }
@@ -2653,200 +2616,6 @@ bool KukaMotionPlanning::moveToEEPose( robotPosture EEInRob_des, int robotIndex)
 
 
 
-
-bool KukaMotionPlanning::visionGuidedMoveToPosture_noVision(robotPosture initToolInMan,
-                                                   robotPosture targetToolInMan, int robotIndex,
-                                                   Matrix4d robInCameraFrame,
-                                                   Matrix4d toolInEE, char *toolFile,
-                                                   char *millisecbuffer, int ms)
-{
-    cv::Mat mandrelInCamFrame, toolInCamFrame;
-    Matrix4d toolInRobFrame, desiredToolInRob, deltaToolInRob, desiredEEInRob;
-    robotPosture EEInRob_robpose;
-    float speedlimit;
-
-
-    ///////////////// Read current mandrel and tool poses /////////////////
-    aruco::Marker man, tool;
-    myTracker->toolsTracker->Tools[0].Tvec.copyTo(man.Tvec);
-    myTracker->toolsTracker->Tools[0].Rvec.copyTo(man.Rvec);
-    man.id = myTracker->toolsTracker->Tools[0].id;
-    myTracker->toolsTracker->Tools[robotIndex+1].Tvec.copyTo(tool.Tvec);
-    myTracker->toolsTracker->Tools[robotIndex+1].Rvec.copyTo(tool.Rvec);
-    tool.id = myTracker->toolsTracker->Tools[robotIndex+1].id;
-
-    //myTracker->toolsTracker->toolPose2cvTrans(myTracker->toolsTracker->Tools[0], mandrelInCamFrame);
-    myTracker->toolsTracker->toolPose2cvTrans(man, mandrelInCamFrame);
-    mandrelInCamFrame.convertTo(mandrelInCamFrame, CV_64F);
-
-    // HARDCODE TO FIXED POSITION ----------------------
-    manInCam_ini.copyTo(mandrelInCamFrame);
-
-    myTracker->toolsTracker->toolPose2cvTrans(tool, toolInCamFrame);
-    toolInCamFrame.convertTo(toolInCamFrame, CV_64F);
-
-        for(int k=0; k<3; k++)
-        {
-            toolsInCam << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[0] << " "
-                       << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[1] << " "
-                       << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[2] << " "
-                       << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[0] << " "
-                       << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[1] << " "
-                       << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[2] << " ";
-        }
-
-        toolsInCam << myTracker->toolsTracker->Tools[0].id << " "
-                   << myTracker->toolsTracker->Tools[1].id << " "
-                   << myTracker->toolsTracker->Tools[2].id << " ";
-
-
-    // Read current tool position in robot
-        if (initTool_bool == false)
-        {
-            initToolInRobFrame = readToolPoseInIIWAbase(robotIndex, toolFile);
-            initTool_bool = true;
-        }
-        toolInRobFrame = readToolPoseInIIWAbase(robotIndex, toolFile);
-
-    /////////////// Compute next desired EE pose in robot /////////////////
-
-#ifdef SimulationON
-    speedlimit = 0.5;
-//    desiredToolInRob = initToolInRobFrame *
-//                        Functions::convertRobotPosture2HomoMatrix(initToolInMan).inverse() *
-//                        Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-
-//    cout<< "robInCameraFrame " << robInCameraFrame << endl;
-//    cout << "mandrelInCamFrame " << mandrelInCamFrame << endl;
-//    cout << "targetToolInMan " << Functions::convertRobotPosture2HomoMatrix(targetToolInMan) << endl;
-
-    desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                       Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-//    cout << "deltaTool " << robotIndex << " no vision simulation: " <<endl;
-#else
-    speedlimit = 0.05;
-
-
-    if (robotIndex == 0)
-    {
-        robInCameraFrame = Functions::CVMat2Eigen(cHr0_updated);
-    }
-    if (robotIndex == 1)
-    {
-        robInCameraFrame = Functions::CVMat2Eigen(cHr1_updated);
-    }
-
-
-    if (mandrelInCamFrame.at<double>(0,3) != -1000 && toolInCamFrame.at<double>(0,3) != -1000
-            && tool.Tvec.ptr<float>(0)[0] != -1000)
-    {
-//        desiredToolInRob = initToolInRobFrame *
-//                            Functions::convertRobotPosture2HomoMatrix(initToolInMan).inverse() *
-//                            Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-        desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                           Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-        cout << "deltaEEInRob " << robotIndex << " no vision: " << endl;
-    }
-    else
-    {
-//        desiredToolInRob = initToolInRobFrame *
-//                            Functions::convertRobotPosture2HomoMatrix(initToolInMan).inverse() *
-//                            Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-        desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                           Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
-        cout << "deltaEEInRob " << robotIndex << " no detect: " << endl;
-    }
-#endif
-
-    desiredEEInRob = desiredToolInRob * toolInEE.inverse();
-    Matrix4d deltaT = toolInRobFrame.inverse() * desiredToolInRob;
-//    cout << deltaT << endl;
-//    cout << "toolInRobFrame " << toolInRobFrame << endl;
-//    cout << "robInCameraFrame " << robInCameraFrame << endl;
-//    cout << "mandrelInCamFrame " << mandrelInCamFrame << endl;
-//    cout << "targetToolInMan " << Functions::convertRobotPosture2HomoMatrix(targetToolInMan) << endl;
-
-
-    while (abs(deltaT(0,3)) > speedlimit || abs(deltaT(1,3)) > speedlimit||abs(deltaT(2,3)) > speedlimit)
-    {
-        cout << "No vision Reach velocity maximum " << speedlimit << " : " <<deltaT(0,3) << " " << deltaT(1,3) <<
-                " " << deltaT(2,3) << " Stop!" << endl;
-        msleep(500);
-    }
-
-
-    EEInRob_robpose = Functions::convertHomoMatrix2RobotPosture(desiredEEInRob);
-    Matrix4d EEInRobCurr= dualArmPlanner->getRobotInstance(robotIndex)->getHomoMatrix();
-    robotPosture EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(EEInRobCurr);
-
-    if (EEInRobCurrPose.getQuaternion().dot(
-                EEInRob_robpose.getQuaternion()) < 0)
-    {
-        EEInRob_robpose.getQuaternion().w() *= -1;
-        EEInRob_robpose.getQuaternion().x() *= -1;
-        EEInRob_robpose.getQuaternion().y() *= -1;
-        EEInRob_robpose.getQuaternion().z() *= -1;
-    }
-
-    //moveToEEPose(EEInRob_robpose, robotIndex);
-
-    dualArmPlanner->setDesTipPosture(EEInRob_robpose, robotIndex); //-------------------------
-
-#ifdef SimulationON
-#else
-    msleep(ROBOTSLEEP);
-#endif
-
-
-       // Save command ------------------------------------
-       Matrix4d eeInRobDesired_mat4d = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
-                                       Functions::convertRobotPosture2HomoMatrix(targetToolInMan)
-                                       * toolInEE.inverse();
-       robotPosture eeInRobDesired = Functions::convertHomoMatrix2RobotPosture(eeInRobDesired_mat4d);
-//       fEEInRobots << EEInRobCurrPose.getPosition().transpose()
-//                   << " " << EEInRobCurrPose.getQuaternion().w()
-//                   << " " << EEInRobCurrPose.getQuaternion().x()
-//                   << " " << EEInRobCurrPose.getQuaternion().y()
-//                   << " " << EEInRobCurrPose.getQuaternion().z()
-//                   << " ";
-//       fEEInRobots << EEInRob_robpose.getPosition().transpose()
-//                   << " " << EEInRob_robpose.getQuaternion().w()
-//                   << " " << EEInRob_robpose.getQuaternion().x()
-//                   << " " << EEInRob_robpose.getQuaternion().y()
-//                   << " " << EEInRob_robpose.getQuaternion().z()
-//                   << " " << millisecbuffer << ms
-//                   << " ";
-
-       EEInRobCurr= dualArmPlanner->getRobotInstance(robotIndex)->getHomoMatrix();
-       EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(EEInRobCurr);
-       fEEInRobots << " " << EEInRobCurrPose.getPosition().transpose()
-                   << " " << EEInRobCurrPose.getQuaternion().w()
-                   << " " << EEInRobCurrPose.getQuaternion().x()
-                   << " " << EEInRobCurrPose.getQuaternion().y()
-                   << " " << EEInRobCurrPose.getQuaternion().z();
-       if (robotIndex == 1)
-            fEEInRobots << endl;
-       //--------------------------------------------------
-
-       // Dectect marker after moving ------------------------------------
-       for(int k=0; k<3; k++)
-       {
-           toolsInCam << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[0] << " "
-                      << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[1] << " "
-                      << myTracker->toolsTracker->Tools[k].Tvec.ptr<float>(0)[2] << " "
-                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[0] << " "
-                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[1] << " "
-                      << myTracker->toolsTracker->Tools[k].Rvec.ptr<float>(0)[2] << " ";
-       }
-       toolsInCam << millisecbuffer << ms << " ";
-
-       toolsInCam << -1000 << " " << -1000 << " " << -1000 << " "
-                  << -1000 << " " << -1000 << " " << -1000 << endl;
-
-       //--------------------------------------------------
-}
-
-
 bool KukaMotionPlanning::visionGuidedMoveToPosture_noVision_iiwa(robotPosture initToolInMan,
                                                                    robotPosture targetToolInMan, int robotIndex,
                                                                    Matrix4d robInCameraFrame,
@@ -2950,17 +2719,29 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_noVision_iiwa(robotPosture in
 
     Erl::Transformd iiwaTransformd = Functions::Eigen2Erl(desiredEEInRob);
 
-    cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
+	ros::spinOnce();
+	if (robotIndex == 0)
+	{
+		cout << "iiwaCurrent" << endl << iiwa0_currentTransformd << endl;
+	}else if (robotIndex == 1)
+	{
+		cout << "iiwaCurrent" << endl << iiwa1_currentTransformd << endl;
+	}
+    //cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
     cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
 
 //    myTracker->DrawHandEye = true;
 
+	
+	//move iiwa
+    moveIiwa(robotIndex,iiwaTransformd);
+
 #ifdef SimulationON
 #else
-    iiwas[robotIndex]->setiiwaPose(iiwaTransformd);
-    while(!iiwas[robotIndex]->iiwaReached())
-    {
-    }
+//    iiwas[robotIndex]->setiiwaPose(iiwaTransformd);
+//   while(!iiwas[robotIndex]->iiwaReached())
+//    {
+//    }
 #endif
 
 
@@ -2970,7 +2751,16 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_noVision_iiwa(robotPosture in
                                        * toolInEE.inverse();
        robotPosture eeInRobDesired = Functions::convertHomoMatrix2RobotPosture(eeInRobDesired_mat4d);
 
-       Erl::Transformd erl = iiwas[robotIndex]->getiiwaPose();
+       //Erl::Transformd erl = iiwas[robotIndex]->getiiwaPose();
+       ros::spinOnce();
+       Erl::Transformd erl;
+       if (robotIndex == 0)
+       {
+       		erl = iiwa0_currentTransformd;
+       }else if (robotIndex == 1)
+       {
+       		erl = iiwa1_currentTransformd;
+       }
        Matrix4d EEInRobCurr = Functions::Erl2Eigen(erl);
        robotPosture EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(EEInRobCurr);
        fEEInRobots << " " << EEInRobCurrPose.getPosition().transpose()
@@ -2999,16 +2789,16 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_noVision_iiwa(robotPosture in
 
        //--------------------------------------------------
 			// Get Kuka current Joints
-			Eigen::Matrix<double, 7, 1> currJoints = iiwas[robotIndex]->iiwa.getJoints();
+/*			Eigen::Matrix<double, 7, 1> currJoints = iiwas[robotIndex]->iiwa.getJoints();
 			fKukaJointsTraj << currJoints[0] << " " << currJoints[1] << " " << currJoints[2] << " "
 											<< currJoints[3] << " " << currJoints[4] << " " << currJoints[5] << " "
 											<< currJoints[6] <<endl;
+*/
 }
 
 
 
-robotPosture KukaMotionPlanning::visionGuidedIIWAMoveToInitialPosture
-                                  (robotPosture currentToolInMan,
+robotPosture KukaMotionPlanning::visionGuidedIIWAMoveToInitialPosture(
                                    robotPosture targetToolInMan, int robotIndex,
                                    Matrix4d robInCameraFrame,
                                    Matrix4d toolInEE, char *toolFile)
@@ -3070,9 +2860,16 @@ robotPosture KukaMotionPlanning::visionGuidedIIWAMoveToInitialPosture
 
     desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
                        Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
+    cout<<"visionGuidedIIWAMoveToInitialPosture robInCameraFrame"<<endl<<robInCameraFrame<<endl;
+    cout<<"visionGuidedIIWAMoveToInitialPosture mandrelInCamFrame"<<endl<<mandrelInCamFrame<<endl;
+    cout<<"visionGuidedIIWAMoveToInitialPosture targetToolInMan"<<endl<<targetToolInMan<<endl;
+
     desiredEEInRob = desiredToolInRob * toolInEE.inverse();
 
     EEInRob_robpose = Functions::convertHomoMatrix2RobotPosture(desiredEEInRob);
+    cout << "visionGuidedIIWAMoveToInitialPosture EEInRob_robpose " ;
+    EEInRob_robpose.print();
+
     return EEInRob_robpose;
 }
 
@@ -3366,7 +3163,16 @@ void KukaMotionPlanning::computeToolInManTraj(vector<robotPosture> &traj_Mandrel
 
         robotPosture toolInManTemp = Functions::convertHomoMatrix2RobotPosture( toolInMan_trans );
         traj_ToolLInMan.push_back(toolInManTemp);
+        
+        if(i == 0){
+        	cout<<"manInCam_trans"<<endl<<manInCam_trans<<endl;
+        	cout<<"toolInCam_trans"<<endl<<toolInCam_trans<<endl;
+        	cout<<"toolInMan_trans"<<endl<<toolInMan_trans<<endl;
+            cout<<"traj_ToolLInMan"<<endl<<traj_ToolLInMan[0].getPosition()<<" "<<traj_ToolLInMan[0].getQuaternion().w()<<" "<<traj_ToolLInMan[0].getQuaternion().x()<<" "<<traj_ToolLInMan[0].getQuaternion().y()<<" "<<traj_ToolLInMan[0].getQuaternion().z()<<endl;
+        	}
     }
+    
+    
 }
 
 
@@ -3409,7 +3215,17 @@ Matrix4d KukaMotionPlanning::readToolPoseInIIWAbase(int robotRef, char* toolFile
     ifstream f_stream3(toolFile);
 
     // Read from iiwa ------------------------------------
-    Erl::Transformd rTee = iiwas[robotRef]->getiiwaPose();
+    //Erl::Transformd rTee = iiwas[robotRef]->getiiwaPose();
+	ros::spinOnce();
+	Erl::Transformd rTee;
+	if (robotRef == 0)
+	{
+		rTee = iiwa0_currentTransformd;
+	}else if (robotRef == 1)
+	{
+		rTee = iiwa1_currentTransformd;
+	}
+    cout<<"rTee"<<endl<<rTee<<endl;
 
     Eigen::Matrix4d EE_eigen = Functions::Erl2Eigen(rTee);
     Matrix4d markerInTip;
@@ -3472,10 +3288,10 @@ void KukaMotionPlanning::enableGravy()
 void KukaMotionPlanning::disableGravy()
 {
     cout << "disGravy" << endl;
-    if (iiwas[0]->iiwaConnected == true)
+/*    if (iiwas[0]->iiwaConnected == true)
         iiwas[0]->DisableGravityCompensation();
     if (iiwas[1]->iiwaConnected == true)
-        iiwas[1]->DisableGravityCompensation();
+        iiwas[1]->DisableGravityCompensation();*/
 }
 
 void KukaMotionPlanning::plannerClose()
@@ -4187,59 +4003,6 @@ void KukaMotionPlanning::   InitializeTrajectory(int status, char* trajFile, cv:
     msleep(1000);
 }
 
-void KukaMotionPlanning::PlayTrajectory_CameraFrame(int robotIndex, int trajIndex_pre, int trajIndex,
-                                             vector<robotPosture> traj_toolInman,
-                                             vector<float> traj_driverl, vector<float> traj_driverr,
-                                             char *millisecbuffer, int ms)
-{
-#ifdef SimulationON
-    if (robotIndex == 0)
-        visionGuidedMoveToPosture_noVision(traj_toolInman[0], traj_toolInman[trajIndex], 0,
-                                            Functions::CVMat2Eigen(CAMERA_H_ROBOT0), Functions::CVMat2Eigen(EE_H_TOOLL), fname_eeHl,
-                                            millisecbuffer, ms);
-    if (robotIndex == 1)
-    {
-        cout << "Traj Index " << trajIndex << endl;
-        visionGuidedMoveToPosture_noVision(traj_toolInman[0], traj_toolInman[trajIndex], 1,
-                                            Functions::CVMat2Eigen(CAMERA_H_ROBOT1), Functions::CVMat2Eigen(EE_H_TOOLR), fname_eeHr,
-                                            millisecbuffer, ms);
-    }
-#else
-    if (robotIndex == 0)
-    {
-//        cout << "Before kalmanvision" << endl;
-        if (trajIndex%10==0)
-            visionGuidedMoveToPosture_kalmanvision(traj_toolInman[trajIndex_pre], traj_toolInman[trajIndex], 0,
-                                                   Functions::CVMat2Eigen(CAMERA_H_ROBOT0), Functions::CVMat2Eigen(EE_H_TOOLL), fname_eeHl,
-                                                   millisecbuffer, ms);
-        else
-            visionGuidedMoveToPosture_noVision(traj_toolInman[trajIndex_pre], traj_toolInman[trajIndex], 0,
-                                               Functions::CVMat2Eigen(CAMERA_H_ROBOT0), Functions::CVMat2Eigen(EE_H_TOOLL), fname_eeHl,
-                                               millisecbuffer, ms);
-//        cout << "After kalmanvision" << endl;
-    }
-    if (robotIndex == 1)
-    {
-        if (trajIndex%10==0)
-            visionGuidedMoveToPosture_kalmanvision(traj_toolInman[trajIndex_pre], traj_toolInman[trajIndex], 1,
-                                                   Functions::CVMat2Eigen(CAMERA_H_ROBOT1), Functions::CVMat2Eigen(EE_H_TOOLR), fname_eeHr,
-                                                   millisecbuffer, ms);
-        else
-            visionGuidedMoveToPosture_noVision(traj_toolInman[trajIndex_pre], traj_toolInman[trajIndex], 1,
-                                               Functions::CVMat2Eigen(CAMERA_H_ROBOT1), Functions::CVMat2Eigen(EE_H_TOOLR), fname_eeHr,
-                                               millisecbuffer, ms);
-    }
-#endif
-
-////    cout << "Before set driver!" << endl;
-//    if (trajIndex<traj_driverl.size() || trajIndex<traj_driverr.size())
-//    {
-//        myNeedleDriver->changePos0(traj_driverl[trajIndex]);
-//        myNeedleDriver->changePos1(traj_driverr[trajIndex]);
-////        cout << "traj_driverr[trajIndex] " << traj_driverr[trajIndex] << endl;
-//    }
-//    cout << "After set driver!" << endl;
-}
 
 
 
@@ -4261,4 +4024,75 @@ void KukaMotionPlanning::recordforLiang()
 {
     myTracker->SaveImage = true;
     cout << "recordforLiang " << endl;
+}
+
+bool KukaMotionPlanning::moveIiwa(int robotRef, Erl::Transformd iiwa_transformd){
+
+    ros::Rate rate(rate_hz);
+cout<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+
+    /*if (robotRef == 0){
+        while(!iiwa0_reached || !exotica_complete){
+            ros::spinOnce;
+        }
+    }
+    if (robotRef == 1){
+        while(!iiwa1_reached || !exotica_complete){
+            ros::spinOnce;
+            //cout<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+        }
+    }*/
+    if (exotica_complete && robotRef == 0){
+    //if (iiwa0_reached && exotica_complete && robotRef == 0){
+		std_msgs::Float64MultiArray msg;
+        for (int i = 0; i <3;i++){
+            for (int j = 0; j<4; j++){
+                if (j == 3){
+                     msg.data.push_back(iiwa_transformd(i,j)/1000.0);
+                }else{
+                    msg.data.push_back(iiwa_transformd(i,j));
+                }
+
+            }
+        }
+		pub_iiwa0_desiredEEInRob.publish(msg);
+        pub_iiwa0_desiredEEInRob_sent.publish(true);
+        rate.sleep();
+		exotica_complete = false;
+		iiwa0_reached = false;		
+        while(!exotica_complete || !iiwa0_reached){
+			ros::spinOnce();
+		}
+		return true;		
+	}	
+    if (exotica_complete && robotRef == 1){
+    //if (iiwa1_reached && exotica_complete && robotRef == 1){
+		std_msgs::Float64MultiArray msg;
+        for (int i = 0; i <3;i++){
+            for (int j = 0; j<4; j++){
+                if (j == 3){
+                     msg.data.push_back(iiwa_transformd(i,j)/1000.0);
+                }else{
+                    msg.data.push_back(iiwa_transformd(i,j));
+                }
+            }
+        }
+		pub_iiwa1_desiredEEInRob.publish(msg);
+        pub_iiwa1_desiredEEInRob_sent.publish(true);
+        cout<<"iiwa1_desiredEEInRob published"<<endl;
+        rate.sleep();
+		exotica_complete = false;
+		iiwa1_reached = false;		
+
+        cout<<"moving iiwa"<<endl;
+        while(!exotica_complete || !iiwa1_reached){
+			ros::spinOnce();
+            //cout<<"return "<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+
+		}
+        cout<<"return true "<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+		return true;	
+	}	
+
+	return false;
 }

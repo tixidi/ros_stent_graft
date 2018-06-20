@@ -1,0 +1,66 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BayesianOptimization	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from bayes_opt import BayesianOptimization$/;"	i
+Bool	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from std_msgs.msg import Bool, Int64$/;"	i
+Float64MultiArray	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from std_msgs.msg import Float64MultiArray$/;"	i
+Int64	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from std_msgs.msg import Bool, Int64$/;"	i
+JointState	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from sensor_msgs.msg import JointState$/;"	i
+Quaternion	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from pyquaternion import Quaternion$/;"	i
+Tau	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^Tau = 0.05$/;"	v
+callback_exotica_complete	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_exotica_complete(data):$/;"	f
+callback_iiwa0_connected	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa0_connected(data):$/;"	f
+callback_iiwa0_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa0_desiredEEInRob(data):$/;"	f
+callback_iiwa0_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa0_destJoints(data):$/;"	f
+callback_iiwa0_msrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa0_msrTransform(data):$/;"	f
+callback_iiwa0_reached	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa0_reached(data):$/;"	f
+callback_iiwa1_connected	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa1_connected(data):$/;"	f
+callback_iiwa1_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa1_desiredEEInRob(data):$/;"	f
+callback_iiwa1_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa1_destJoints(data):$/;"	f
+callback_iiwa1_msrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa1_msrTransform(data):$/;"	f
+callback_iiwa1_reached	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def callback_iiwa1_reached(data):$/;"	f
+cv2	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import cv2$/;"	i
+exo	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import pyexotica as exo$/;"	i
+exotica_complete	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^exotica_complete = False$/;"	v
+iiwa0_connected	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_connected = False$/;"	v
+iiwa0_currMsrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_currMsrTransform = []	##homogeneous trasformation$/;"	v
+iiwa0_currMsrTransform_received	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_currMsrTransform_received = False$/;"	v
+iiwa0_default_currMsrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_default_currMsrTransform = [-0.18725492,  0.84542901, -0.50018916, -0.59726775, -0.97520191, -0.09886336,  0.19798807, -0.25512601, 0.11793113,  0.52485612,  0.84297739,  0.40726137];$/;"	v
+iiwa0_default_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_default_desiredEEInRob = [1.67658125e-01,	3.91014254e-02,	1.58723434e-01,	5.57527601e-01,	7.51268653e-01,	-2.11285285e-01,	-2.83049313e-01]$/;"	v
+iiwa0_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_desiredEEInRob = []		##quaternion$/;"	v
+iiwa0_desiredEEInRob_received	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_desiredEEInRob_received = False;$/;"	v
+iiwa0_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_destJoints = [];$/;"	v
+iiwa0_reached	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa0_reached = False;$/;"	v
+iiwa1_connected	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_connected = False$/;"	v
+iiwa1_currMsrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_currMsrTransform = []	##homogeneous trasformation$/;"	v
+iiwa1_currMsrTransform_received	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_currMsrTransform_received = False$/;"	v
+iiwa1_default_currMsrTransform	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_default_currMsrTransform = [0.15776873, -0.14297075,  0.97707544,  0.37679855, -0.98729879, -0.04151556,  0.15334503, -0.49452684, 0.01863774, -0.98885802, -0.14770564,  0.43736135]$/;"	v
+iiwa1_default_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_default_desiredEEInRob = [-0.15402268, 0.04296034, 0.14749935, 0.46677196, 0.43085328, 0.44358363, 0.63223647]$/;"	v
+iiwa1_desiredEEInRob	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_desiredEEInRob = []		##quaternion$/;"	v
+iiwa1_desiredEEInRob_received	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_desiredEEInRob_received = False;$/;"	v
+iiwa1_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_destJoints = [];$/;"	v
+iiwa1_reached	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^iiwa1_reached = False;$/;"	v
+inv	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from numpy.linalg import inv$/;"	i
+is_trajectory_valid	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def is_trajectory_valid(problem, solution):$/;"	f
+length	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^length = 2$/;"	v
+main	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def main():$/;"	f
+math	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import math$/;"	i
+mpl	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import matplotlib as mpl$/;"	i
+np	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import numpy as np$/;"	i
+plotEndEeffector	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def plotEndEeffector(problem, traj):$/;"	f
+plotSolution	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def plotSolution(solution):$/;"	f
+pub_exotica_complete	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^pub_exotica_complete = rospy.Publisher('exotica_complete', Bool, queue_size=10,latch=True)$/;"	v
+pub_exotica_count	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^pub_exotica_count = rospy.Publisher('exotica_count', Int64, queue_size=10,latch=True)$/;"	v
+pub_iiwa0_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^pub_iiwa0_destJoints = rospy.Publisher('iiwa0_destJoints', JointState, queue_size=100,latch=True)$/;"	v
+pub_iiwa1_destJoints	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^pub_iiwa1_destJoints = rospy.Publisher('iiwa1_destJoints', JointState, queue_size=100,latch=True)$/;"	v
+rate_hz	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^rate_hz = 30$/;"	v
+rospy	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import rospy$/;"	i
+save_trajectory	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def save_trajectory(solution):$/;"	f
+sleep	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^from time import sleep$/;"	i
+sys	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import sys$/;"	i
+time	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^import time$/;"	i
+write_traj	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def write_traj(iiwaNo, iiwa_start_trans, iiwa_end_quat):$/;"	f
+write_traj_quat	/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/exotica_collision_detection.py	/^def write_traj_quat(iiwaNo, iiwa_start_quat, iiwa_end_quat):$/;"	f

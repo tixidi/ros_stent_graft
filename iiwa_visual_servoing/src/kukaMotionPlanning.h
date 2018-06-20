@@ -32,6 +32,16 @@
 #include <Eigen/Dense>
 #include "VisionSystem/globals.h"
 
+
+#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Bool.h>
+#include "sensor_msgs/JointState.h"
+#include <iiwa_test/iiwaState.h>
+#ifndef Q_MOC_RUN
+#include <ros/ros.h>
+#endif
+
+
 class KukaMotionPlanning: public QThread
 {
    Q_OBJECT
@@ -62,11 +72,7 @@ public:
                                           robotPosture targetToolInMan, int robotIndex,
                                           Matrix4d robInCameraFrame,
                                           Matrix4d toolInEE, char *toolFile);
-   bool visionGuidedMoveToPosture_kalmanvision(robotPosture currentToolInMan,
-                                              robotPosture targetToolInMan, int robotIndex,
-                                              Matrix4d robInCameraFrame,
-                                              Matrix4d toolInEE, char *toolFile,
-                                              char *millisecbuffer, int ms);
+
    bool visionGuidedMoveToPosture_kalmanvision_iiwa(robotPosture currentToolInMan,
                                                       robotPosture targetToolInMan, int robotIndex,
                                                       Matrix4d robInCameraFrame,
@@ -76,17 +82,12 @@ public:
    bool moveToEEPose(robotPosture EEInRob_des, int robotIndex);
    bool pullThread_moveToEEPose( robotPosture EEInRob_des, int robotIndex, int force_thres);
 
-
-   bool visionGuidedMoveToPosture_noVision(robotPosture currentToolInMan,
-                                          robotPosture targetToolInMan, int robotIndex,
-                                          Matrix4d robInCameraFrame,
-                                          Matrix4d toolInEE, char *toolFile, char *millisecbuffer, int ms);
    bool visionGuidedMoveToPosture_noVision_iiwa(robotPosture currentToolInMan,
                                                   robotPosture targetToolInMan, int robotIndex,
                                                   Matrix4d robInCameraFrame,
                                                   Matrix4d toolInEE, char *toolFile, char *millisecbuffer, int ms);
 
-   robotPosture visionGuidedIIWAMoveToInitialPosture(robotPosture currentToolInMan, robotPosture targetToolInMan, int robotIndex,
+   robotPosture visionGuidedIIWAMoveToInitialPosture(robotPosture targetToolInMan, int robotIndex,
                                           Matrix4d robInCameraFrame,
                                           Matrix4d toolInEE, char *toolFile);
 
@@ -138,7 +139,36 @@ private:
    std::string dir_demo;
 
    ofstream toolsInCam, fEEInRobot0, fEEInRobots, fHandEye0, fHandEye1, fEEInRobots_timer, fJoints01, fkuka0Hee, fKukaJointsTraj;
+   // ROS --------------------------------
+    int rate_hz = 300;
+    bool exotica_complete = false;
+	bool iiwa0_reached = false;
+	bool iiwa1_reached = false;
+	bool iiwa0_connected = false;
+	bool iiwa1_connected = false;
+    bool iiwa0_msrTransform_received = true;
+    bool iiwa1_msrTransform_received = true;
+    int iiwa0_state_count = -1;
+    int iiwa1_state_count = -1;
+	Matrix4d iiwa0_currentMartix4d, iiwa1_currentMartix4d;
+	Erl::Transformd iiwa0_currentTransformd, iiwa1_currentTransformd;
+	//Eigen::Matrix<double, 7, 1> iiwa0_currJoints, iiwa1_currJoints;
+	//bool iiwa0_desiredEEInRob_published = false;
+	//bool iiwa1_desiredEEInRob_published = false;
 
+
+
+    void posCallback_iiwa0_state(const iiwa_test::iiwaState::ConstPtr& msg);
+    void posCallback_iiwa1_state(const iiwa_test::iiwaState::ConstPtr& msg);
+	void posCallback_iiwa0_reached(const std_msgs::Bool::ConstPtr& msg);
+	void posCallback_iiwa1_reached(const std_msgs::Bool::ConstPtr& msg);
+	void posCallback_iiwa0_connected(const std_msgs::Bool::ConstPtr& msg);
+	void posCallback_iiwa1_connected(const std_msgs::Bool::ConstPtr& msg);
+	void posCallback_exotica_complete(const std_msgs::Bool::ConstPtr& msg);
+	//void posCallback_iiwa0_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
+	//void posCallback_iiwa1_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
+	
+    bool moveIiwa(int robotRef, Erl::Transformd iiwa_transformd);
    // IIWA -------------------------------
    int Num_Slot;
    double Dist_Slot;

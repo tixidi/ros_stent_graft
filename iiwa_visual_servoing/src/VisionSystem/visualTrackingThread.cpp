@@ -512,9 +512,12 @@ void VisualTrackingThread::run()
             }
 
             cout << "ToolRHNeedle " << endl << ToolRHNeedle << endl;
-
+			
+			cout<<toolsTracker->Tools.size()<<endl;
+			cout<<toolIndx_detectneedle<<endl;
             if (toolsTracker->Tools[toolIndx_detectneedle].Tvec.ptr<float>(0)[0] != -1000)
             {
+				
                 pose3Dto2D->estimatePose(&currFrame1cLeft, &currFrame1cRight, NeedlePoints_tmp, &needlePoseFinal, toolIndx_detectneedle);
 //                pose3Dto2D->printNeedleSearchRange(GlobaleImages.frameLeft, GlobaleImages.frameRight, NeedlePoints,
 //                                                   toolIndx_detectneedle, 0, 255, 0);
@@ -535,12 +538,13 @@ void VisualTrackingThread::run()
                         fneedleNewInToolL << endl;
                     else
                         fneedleNewInToolR << endl;
+					
                 }
                 if (toolIndx_detectneedle == 1)
                     fneedleNewInToolL.close();
                 else
                     fneedleNewInToolR.close();
-
+				
                 for (int i=0; i<NeedlePoints.size(); i++)
                 {
                     nHp.at<double>(0,3) = NeedlePoints[i].x;
@@ -592,12 +596,14 @@ void VisualTrackingThread::run()
                 saveAllNeedleResults(pose3Dto2D->needle3D_all, pose3Dto2D);
 
                 needleDetected = true;
+				
 //#ifdef SimulationON
 //#else
                 //if (saveDetecedNeedle)
 //                    SaveImage = true;
 //#endif
             }
+          
         }
 
 //         Save image -------------------------
@@ -635,6 +641,7 @@ void VisualTrackingThread::run()
 
         if (sigREcod==true)
         recordVideo();
+		
     }
 
 }
@@ -2490,15 +2497,14 @@ void VisualTrackingThread::showNeedleInCam( cv::Mat &needlePoseInCamCV, std::vec
 
 
 
-void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHr)
+void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
 {
     Vector4d origin(0,0,0,1);
     Vector4d x(0.02,0,0,1);
     Vector4d y(0,0.02,0,1);
     Vector4d z(0,0,0.02,1);
 
-    //Matrix4d  markerInHandeyeFrame = CV2EigenMat(markerInHandEye) ;
-    Matrix4d  markerInHandeyeFrame = CV2EigenMat(cHr) ;/*
+    Matrix4d  markerInHandeyeFrame = CV2EigenMat(cHm) ;/*
     cout << "markerInHandeyeFrame: " << markerInHandeyeFrame << endl;*/
 
     Vector4d originInCam = markerInHandeyeFrame*origin;
@@ -2545,6 +2551,7 @@ void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHr)
     line(GlobaleImages.frameLeft, framePoints2D[0], framePoints2D[2], Scalar(0,255,0), 2, 8, 0);
     line(GlobaleImages.frameLeft, framePoints2D[0], framePoints2D[3], Scalar(255,0,0), 2, 8, 0);
 }
+
 
 void VisualTrackingThread::showNeedleDriverFrameInCam( cv::Mat &needleDriverPoseInCamCV, bool newHandEye )
 {
