@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/built/devel/setup.sh

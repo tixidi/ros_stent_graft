@@ -133,6 +133,7 @@ set(CMAKE_AUTOMOC ON)
 # To automatically run UIC when building (User Interface Compiler)
 set(CMAKE_AUTOUIC ON)
 
+
 # Find the QtWidgets library
 find_package(Qt5 COMPONENTS Core Widgets SerialPort REQUIRED)
 

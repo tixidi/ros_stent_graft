@@ -1,0 +1,8 @@
+prefix=/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_vs_core/build/devel
+
+Name: iiwa_vs_core
+Description: Description of iiwa_vs_core
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_vs_core/build/devel/lib 
+Requires: 

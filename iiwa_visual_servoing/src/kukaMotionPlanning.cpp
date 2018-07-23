@@ -71,7 +71,8 @@ void KukaMotionPlanning::posCallback_iiwa0_state(const iiwa_test::iiwaState::Con
 
     //cout<<iiwa0_state_count <<" "<<msg->header.seq<<" "<<iiwa0_reached<<endl;
 //        cout<<"iiwa0 state =  "<<iiwa0_state_count<<" "<<msg->header.seq<<endl;
-    if (msg->header.seq-iiwa0_state_count == 1){
+//    if (msg->header.seq-iiwa0_state_count == 1){
+    if (msg->header.seq-iiwa0_state_count>=1){
         iiwa0_state_count = msg->header.seq;
         //iiwa0_reached = msg->iiwaReached;
         //iiwa0_connected = msg->iiwaConnected;
@@ -92,10 +93,27 @@ void KukaMotionPlanning::posCallback_iiwa0_state(const iiwa_test::iiwaState::Con
 
         iiwa0_currentTransformd = Functions::Eigen2Erl(iiwa0_currentMartix4d);
         iiwa0_msrTransform_received = true;
+
+        int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        received_kuka0_msrTransform<<nowms<<" ";
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                received_kuka0_msrTransform << iiwa0_currentMartix4d(i,j) <<" ";
+            }
+        }
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                received_kuka0_msrTransform << iiwa0_currentTransformd(i,j) <<" ";
+            }
+        }
+
+
+        received_kuka0_msrTransform << endl;
     }
 }
 void KukaMotionPlanning::posCallback_iiwa1_state(const iiwa_test::iiwaState::ConstPtr& msg){
-    if (msg->header.seq-iiwa1_state_count == 1){
+//    if (msg->header.seq-iiwa1_state_count == 1){
+    if (msg->header.seq-iiwa1_state_count>=1){
         iiwa1_state_count = msg->header.seq;
         //iiwa1_reached = msg->iiwaReached;
         //iiwa1_connected = msg->iiwaConnected;
@@ -116,6 +134,25 @@ void KukaMotionPlanning::posCallback_iiwa1_state(const iiwa_test::iiwaState::Con
 
         iiwa1_currentTransformd = Functions::Eigen2Erl(iiwa1_currentMartix4d);
         iiwa1_msrTransform_received = true;
+
+
+        int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        received_kuka1_msrTransform<<nowms<<" ";
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                received_kuka1_msrTransform << iiwa1_currentMartix4d(i,j) <<" ";
+            }
+        }
+        for (int i = 0; i <3; i++){
+            for (int j = 0; j <4; j++){
+                received_kuka1_msrTransform << iiwa1_currentTransformd(i,j) <<" ";
+            }
+        }
+
+
+        received_kuka1_msrTransform << endl;
+
+
     }
 }
 
@@ -179,7 +216,7 @@ KukaMotionPlanning::KukaMotionPlanning()
     remaps["__name"] = "iiwa_visual_servoing";
     ros::init(remaps,"iiwa_visual_servoing");
     ros::NodeHandle nh;
-	
+
 	//publisher 
 	pub_iiwa0_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa0_desiredEEInRob", 100, true);
     pub_iiwa0_desiredEEInRob_sent = nh.advertise<std_msgs::Bool>("iiwa0_desiredEEInRob_sent", 100, true);
@@ -443,6 +480,9 @@ KukaMotionPlanning::KukaMotionPlanning()
 		fname_kuka_joints_traj = dir_demo + "kukaJoints.txt_" + string(buffer);
     fname_joints_0 = dir_demo + "robot0joints_" + string(buffer);
     fname_kuka0Hee = dir_demo + "robot0Hee.txt";
+    received_kuka0_msrTransform.open(SRC_FILES_DIR+"demonstration/received_kuka0_msrTransform_" + string(buffer));
+    received_kuka1_msrTransform.open(SRC_FILES_DIR+"demonstration/received_kuka1_msrTransform_" + string(buffer));
+
 		
 
 
@@ -464,7 +504,9 @@ void KukaMotionPlanning::run()
     f_marker2handeye.open(fname_cameraHmarker_handeye_mat);
     f_ee_pose.open(fname_ee_robpos);
     f_robotJoints0.open(fname_robotJoints0);
-		fKukaJointsTraj.open(fname_kuka_joints_traj);
+    fKukaJointsTraj.open(fname_kuka_joints_traj);
+    iiwa0_transformd_file.open (SRC_FILES_DIR+"demonstration/iiwa0_transformd.txt_" + string(buffer));
+    iiwa1_transformd_file.open (SRC_FILES_DIR+"demonstration/iiwa1_transformd.txt_" + string(buffer));
 
     while (true)
     {
@@ -639,16 +681,22 @@ void KukaMotionPlanning:: pathPlanning()
 
         trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
-        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat").c_str());
         //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat"; //for iiwa1
 
     }
     else if (RunRobotIndex == 1)
     {
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat").c_str());
-        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
-        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
-        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900_2").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-06-29-12-31.txt_smooth_quat").c_str());
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-07-03-16-15.txt_smooth_quat").c_str());
+
+
+
+        //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
     }
     else if (RunRobotIndex == 2)
     {
@@ -671,10 +719,10 @@ void KukaMotionPlanning:: pathPlanning()
 
         readToolsTrajinMandrelandDrivers(0, EEInRobot_0, traj_ToolLInMan, traj_DriverL, fname_cHr0, fname_eeHl, trajectFile);
         readToolsTrajinMandrelandDrivers(1, EEInRobot_1, traj_ToolRInMan, traj_DriverR, fname_cHr1, fname_eeHr, trajectFile);
-        cout<<"status = 20 traj_ToolRInMan[0] ";
-        traj_ToolRInMan[0].print();
-        cout<<"status = 20 EEInRobot_1 ";
-        EEInRobot_1[0].print();
+        cout<<"status = 20 traj_ToolLInMan[0] ";
+        traj_ToolLInMan[0].print();
+        cout<<"status = 20 EEInRobot_0 ";
+        EEInRobot_0[0].print();
 
         // Plot trajectory -------------------------
         {
@@ -708,9 +756,9 @@ void KukaMotionPlanning:: pathPlanning()
             strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
 
             std::string toolsInCamFname, fEEInRobotsFname, fHandEye0Name, fHandEye1Name,
-                        fToolTimerName, fEEInRobotsTimerFname;
+                        fToolTimerName, fEEInRobotsTimerFname, fRefTrajFname;
             std::string fileDir=SRC_FILES_DIR+"demonstration/";
-            toolsInCamFname = fileDir + "toolmandrel.repeat_" + string(buffer);
+            toolsInCamFname = fileDir + "toolmandrel_step"+std::to_string(TRAJSTEP)+".repeat_" + string(buffer);
             fEEInRobotsFname = fileDir + "EEInRobots.repeat_" + string(buffer);
             fToolTimerName = fileDir + "toolsTimer.txt_" + string(buffer);
             fEEInRobotsTimerFname = fileDir + "EEInRobotsTimer.repeat_" + string(buffer);
@@ -1046,8 +1094,9 @@ void KukaMotionPlanning:: pathPlanning()
         cout << "iiwaCurrent" << endl << iiwa1_currentTransformd << endl;
         cout << "iiwaTransformd" << endl << iiwaTransformd << endl;
 
+
 		ros::spinOnce();
-        bool iiwa_reached = moveIiwa(1, iiwaTransformd);//move iiwa0 and check if rechead
+        bool iiwa_reached = moveIiwa(1, iiwaTransformd);//move iiwa0 and check if reached
         //iiwas[1]->setiiwaPose(iiwaTransformd);
         //if (iiwas[1]->iiwaReached())
         if (iiwa_reached)
@@ -1062,6 +1111,7 @@ void KukaMotionPlanning:: pathPlanning()
             recordRobotPose(traj_ToolLInMan, "traj_ToolLInMan_start.txt");
 
         }
+
     }
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -1230,7 +1280,7 @@ void KukaMotionPlanning:: pathPlanning()
         cout<<"toolsDetected[0] "<<myTracker->toolsTracker->toolsDetected[0]<<endl;
         //while(myTracker->toolsTracker->toolsDetected.size()>0 &&
         //      !(myTracker->toolsTracker->toolsDetected[0]))
-
+        ros::spinOnce();
 //        if (trajIndex%10==0)
         {
             if (RunRobotIndex == 0 || RunRobotIndex == 2)
@@ -2135,7 +2185,7 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
         /// ******************************************************************************
         ///
         ///
-
+        ros::spinOnce();
         robInCameraFrame = Functions::CVMat2Eigen(x_k_kal_mat) * toolInRobFrame.inverse();
         desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
                            Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
@@ -2153,6 +2203,7 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
         {
             robInCameraFrame = Functions::CVMat2Eigen(cHr1_updated);
         }
+
         desiredToolInRob = robInCameraFrame.inverse() * Functions::CVMat2Eigen(mandrelInCamFrame) *
                            Functions::convertRobotPosture2HomoMatrix(targetToolInMan);
 
@@ -2171,7 +2222,21 @@ bool KukaMotionPlanning::visionGuidedMoveToPosture_kalmanvision_iiwa(robotPostur
 
     // Move iiwa to initial pose ---------------
     Erl::Transformd iiwaTransformd = Functions::Eigen2Erl(desiredEEInRob);
-    fEEInRobots << iiwaTransformd << endl;
+    //fEEInRobots << iiwaTransformd << endl;
+    robotPosture EEInRobCurrPose;
+    if (robotIndex == 0){
+        EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(iiwa0_currentMartix4d);
+    }
+    if (robotIndex == 1){
+        EEInRobCurrPose = Functions::convertHomoMatrix2RobotPosture(iiwa1_currentMartix4d);
+    }
+
+
+    fEEInRobots << " " << EEInRobCurrPose.getPosition().transpose()
+                << " " << EEInRobCurrPose.getQuaternion().w()
+                << " " << EEInRobCurrPose.getQuaternion().x()
+                << " " << EEInRobCurrPose.getQuaternion().y()
+                << " " << EEInRobCurrPose.getQuaternion().z()<<endl;
 
     //cout << "iiwaCurrent" << endl << iiwas[robotIndex]->getiiwaPose() << endl;
     ros::spinOnce();
@@ -3108,9 +3173,6 @@ void KukaMotionPlanning::readMandrelToolsDriversInCamera( char * fileDir, vector
     Mat rotCV;
     Mat Rvec(3,1,CV_32F);
 
-		//for debug
-		ofstream cHr_traj("/home/charlie/Documents/workspace/matlab/cHr_traj.txt");
-
     for (int i=0; i<traj_MandrelInCam.size(); i++)
     {
         // 3.1 convert trajectories robotPosture -> matrix
@@ -3131,7 +3193,7 @@ void KukaMotionPlanning::readMandrelToolsDriversInCamera( char * fileDir, vector
 				//toolL_tvec.push_back(Point3f(traj_ToolLInCam[i].getPosition()[0], traj_ToolLInCam[i].getPosition()[1], traj_ToolLInCam[i].getPosition()[2]));
 				//cout<<"toolL_tvec "<<cHl(0,3)<<" "<<cHl(1,3)<<" "<<cHl(2,3)<<endl;
 				//cout<<"traj_ToolLInCam "<<traj_ToolLInCam[i].getPosition()[0]<<endl;
-				cHr_traj<<cHr(0,3)<<" "<<cHr(1,3)<<" "<<cHr(2,3)<<endl;
+                //cHr_traj<<cHr(0,3)<<" "<<cHr(1,3)<<" "<<cHr(2,3)<<endl;
 				///////////////////////
         rotCV = Functions::Eigen2CVMat(cHl);
         cv::Rodrigues(rotCV.colRange(0,3).rowRange(0,3), Rvec);
@@ -3152,6 +3214,7 @@ void KukaMotionPlanning::computeToolInManTraj(vector<robotPosture> &traj_Mandrel
                                               vector<robotPosture> &traj_ToolLInMan)
 {
     // Inputs: traj_MandrelInCam, traj_ToolLInCam. Outputs: traj_ToolLInMan -----
+
 
     for (int i=0; i<traj_ToolLInCam.size(); i++)
     {
@@ -3207,6 +3270,9 @@ void KukaMotionPlanning::tranToolInRob2NeeldeInRob(Matrix4d toolInEE_trans, vect
         robotPosture EEInRobTemp = Functions::convertHomoMatrix2RobotPosture( EEInRob_trans );
         EEInRob.push_back(EEInRobTemp);
     }
+//    cout<<"toolInEE_trans"<<endl<<toolInEE_trans<<endl;
+//    cout<<"toolInRob"<<endl<<toolInRob[0]<<endl;
+//    cout<<"EEInRob"<<endl<<EEInRob[0]<<endl;
 }
 
 
@@ -4029,7 +4095,46 @@ void KukaMotionPlanning::recordforLiang()
 bool KukaMotionPlanning::moveIiwa(int robotRef, Erl::Transformd iiwa_transformd){
 
     ros::Rate rate(rate_hz);
-cout<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+    cout<<"exotica_complete "<<exotica_complete<<" iiwa1_reached "<<iiwa1_reached<<endl;
+
+    int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    iiwa0_transformd_file<<nowms<<" ";
+    iiwa1_transformd_file<<nowms<<" ";
+
+
+
+
+    //record kuka current transformd
+    for (int i = 0; i <3; i++){
+        for(int j = 0; j <4; j ++){
+            if (robotRef == 0){
+                iiwa0_transformd_file<<iiwa0_currentTransformd(i,j)<<" ";
+            }
+            if (robotRef == 1){
+                iiwa1_transformd_file<<iiwa1_currentTransformd(i,j)<<" ";
+            }
+        }
+    }
+
+    //record kuka next transformd
+    for (int i = 0; i <3; i++){
+        for(int j = 0; j <4; j ++){
+            if (robotRef == 0){
+                iiwa0_transformd_file<<iiwa_transformd(i,j)<<" ";
+            }
+            if (robotRef == 1){
+                iiwa1_transformd_file<<iiwa_transformd(i,j)<<" ";
+            }
+        }
+    }
+
+    if (robotRef == 0){
+        iiwa0_transformd_file<<endl;
+    }
+    if (robotRef == 1){
+        iiwa1_transformd_file<<endl;
+    }
+
 
     /*if (robotRef == 0){
         while(!iiwa0_reached || !exotica_complete){

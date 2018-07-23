@@ -19,6 +19,7 @@ using namespace std;
 #define DEFAULT_BAUDNUM		1 // 1Mbps
 #define LOOPERSERVO		5
 #define NEEDLESERVO		1
+#define MANDRELSERVO	11
 //#define LOOPERSERVO		5 1 2 3 4
 //#define NEEDLESERVO		7
 class DynaMotorThread: public QThread
@@ -32,6 +33,7 @@ public:
 public slots:
     void setPositionLooper(int pos);
     void setPositionNeedle(int pos);
+	void setPositionMandrel(int pos);
 private:
     int baudnum;
     int GoalPos[2];

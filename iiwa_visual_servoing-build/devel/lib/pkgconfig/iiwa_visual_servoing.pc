@@ -1,0 +1,8 @@
+prefix=/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing-build/devel
+
+Name: iiwa_visual_servoing
+Description: Description of iiwa_visual_servoing
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing-build/devel/lib 
+Requires: 

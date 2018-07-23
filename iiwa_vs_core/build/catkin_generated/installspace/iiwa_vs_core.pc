@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: iiwa_vs_core
+Description: Description of iiwa_vs_core
+Version: 0.0.0
+Cflags: 
+Libs: -L/usr/local/lib 
+Requires: 

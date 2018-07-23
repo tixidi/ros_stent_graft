@@ -11,9 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-	sensor_msgs
 	message_generation
 )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -53,7 +53,7 @@ add_message_files(
    FILES
 #   Message1.msg
 #   Message2.msg
-	 ToolsPose.msg
+	 iiwaState.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -73,8 +73,8 @@ add_message_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
-#   std_msgs
-	 sensor_msgs
+   std_msgs
+	#sensor_msgs
 )
 
 ################################################
@@ -109,7 +109,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES iiwa_test
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -120,7 +120,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 

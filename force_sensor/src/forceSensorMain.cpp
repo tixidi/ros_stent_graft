@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 
      //Ceates the publisher, and tells it to publish
      //to the stentgraft/read_force topic, with a queue size of 100
-     ros::Publisher pub=nh.advertise<geometry_msgs::Wrench>("read_mandrel_force", 100);
+     ros::Publisher pub=nh.advertise<geometry_msgs::Wrench>("read_mandrel_force", 100, true);
 
      //Sets up the random number generator
      srand(time(0));

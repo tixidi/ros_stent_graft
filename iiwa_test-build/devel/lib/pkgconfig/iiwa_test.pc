@@ -1,0 +1,8 @@
+prefix=/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test-build/devel
+
+Name: iiwa_test
+Description: Description of iiwa_test
+Version: 0.0.0
+Cflags: -I/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test-build/devel/include
+Libs: -L/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test-build/devel/lib 
+Requires: roscpp rospy std_msgs sensor_msgs message_runtime

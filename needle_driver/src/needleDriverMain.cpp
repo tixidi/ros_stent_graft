@@ -2,6 +2,7 @@
 //#include "std_msgs/String.h"
 #include "NeedleDriverInterface.h"
 #include <geometry_msgs/Wrench.h> 
+#include <std_msgs/Bool.h> 
 #include <iostream>
 #include <QApplication>
 using namespace std;
@@ -12,6 +13,7 @@ NeedleDriverInterface* needleDriver;
 void posCallback(const geometry_msgs::Wrench::ConstPtr& msg)
 {
 
+	cout<<"force "<<msg->force.x<<endl;
 	if (msg->force.x>=0){
 		pos+=500;
 	}
@@ -32,7 +34,7 @@ void posCallback(const geometry_msgs::Wrench::ConstPtr& msg)
 	needleDriver->changePos0(pos);
 
 
-//	usleep(1000000);
+	//usleep(1000000);
 
 
 //  ROS_INFO("I heard: [%s]", msg->data.c_str());
@@ -41,8 +43,11 @@ void posCallback(const geometry_msgs::Wrench::ConstPtr& msg)
 
 }
 
+void posCallback_needle_driver(const std_msgs::Bool::ConstPtr& msg)
+{
+	
 
-
+}
 
 int main(int argc, char **argv) {
     //Initializes ROS, and sets up a node
@@ -66,8 +71,20 @@ int main(int argc, char **argv) {
    * away the oldest ones.
    */
     ros::Subscriber sub = nh.subscribe("read_mandrel_force", 1000, posCallback);
+	ros::Subscriber sub_needle_driver = nh.subscribe("needle_driver_command", 1000, posCallback_needle_driver);
+	/*int count  = 0;
 
-
+    while(true){
+		needleDriver->changePos0(pos);
+		usleep(6000000);
+		if (count%2==0)
+			pos+=2000;
+		else
+			pos-=2000;
+		count++;
+		cout<<"pos = "<<pos<<endl;
+		
+	}*/
 
 
   /**

@@ -28,7 +28,13 @@ using namespace std;
 using namespace exotica;
 //exotica variables
 MatrixXd traj_solution;
+double T, Tau;
 //ros variables
+time_t timer;
+char buffer [80];
+long int ms;
+
+int runRobotIdx, mode;
 bool iiwa0_connected = false;
 bool iiwa1_connected = false;
 bool iiwa0_reached = false;
@@ -55,6 +61,7 @@ double iiwa1_default_desiredEEInRob[12] = {0.3162202,  -0.384865,    0.86711691,
 double iiwa0_default_msrTransform[12] = {-0.18725492,  0.84542901, -0.50018916, -0.59726775,-0.97520191, -0.09886336,  0.19798807, -0.25512601, 0.11793113,  0.52485612,  0.84297739,  0.40726137};
 double iiwa1_default_msrTransform[12] = {0.3162202,  -0.384865,    0.86711691,  0.40079543, -0.93000121, -0.30626176,  0.20322061, -0.50430395, 0.18734986, -0.87068207, -0.45477166,  0.48586735};
 
+ofstream received_kuka0_msrTransform, received_kuka1_msrTransform, received_kuka_joints, kuka_traj_quat, qstart, qend;
 
 void posCallback_iiwa0_connected(const std_msgs::Bool::ConstPtr& msg){
 	iiwa0_connected = msg->data;
@@ -118,7 +125,8 @@ void posCallback_iiwa0_state(const iiwa_test::iiwaState::ConstPtr& msg){
 
     //cout<<iiwa0_state_count <<" "<<msg->header.seq<<" "<<iiwa0_reached<<endl;
 //        cout<<"iiwa0 state =  "<<iiwa0_state_count<<" "<<msg->header.seq<<endl;
-    if (msg->header.seq-iiwa0_state_count == 1){
+    //if (msg->header.seq-iiwa0_state_count == 1){
+    if (msg->header.seq-iiwa0_state_count >= 1){
         iiwa0_state_count = msg->header.seq;
         //iiwa0_reached = msg->iiwaReached;
         //iiwa0_connected = msg->iiwaConnected;
@@ -130,10 +138,18 @@ void posCallback_iiwa0_state(const iiwa_test::iiwaState::ConstPtr& msg){
             iiwa0_msrTransform[i] = msg->transform.data[i];
         }
         iiwa0_msrTransform_received = true;
+        
+        int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        received_kuka0_msrTransform<<nowms<<" ";
+        for(int i = 0; i < 12; i++){
+            received_kuka0_msrTransform<<iiwa0_msrTransform[i]<<" ";
+        }
+        received_kuka0_msrTransform<<endl;
     }
 }
 void posCallback_iiwa1_state(const iiwa_test::iiwaState::ConstPtr& msg){
-    if (msg->header.seq-iiwa1_state_count == 1){
+    //if (msg->header.seq-iiwa1_state_count == 1){
+    if (msg->header.seq-iiwa1_state_count >= 1){
         iiwa1_state_count = msg->header.seq;
         //iiwa1_reached = msg->iiwaReached;
         //iiwa1_connected = msg->iiwaConnected;
@@ -145,6 +161,15 @@ void posCallback_iiwa1_state(const iiwa_test::iiwaState::ConstPtr& msg){
             iiwa1_msrTransform[i] = msg->transform.data[i];
         }
         iiwa1_msrTransform_received = true;
+        
+        int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        received_kuka1_msrTransform<<nowms<<" ";
+        for(int i = 0; i < 12; i++){
+            received_kuka1_msrTransform<<iiwa0_msrTransform[i]<<" ";
+        }
+        received_kuka1_msrTransform<<endl;        
+
+        
     }
 }
 
@@ -157,9 +182,9 @@ int main(int argc,char **argv)
 		cerr<<"Usage: [runRobotIdx 0:iiwa0 1:iiwa1 2:both iiwa] [mode 0:kuka 1:test] [sleep time(ms)]"<<endl;
 		return 1;
     }
-    int runRobotIdx = int(stoi(argv[1])); //0:iiwa0 1:iiwa1 2:both iiwa
-	int mode = int(stoi(argv[2])); //0:kuka 1:test
-	
+    runRobotIdx = int(stoi(argv[1])); //0:iiwa0 1:iiwa1 2:both iiwa
+    mode = int(stoi(argv[2])); //0:kuka 1:test
+
 
     //int mode = 1;
     //int runRobotIdx = 0;
@@ -168,8 +193,10 @@ int main(int argc,char **argv)
 		
 	ros::init(argc, argv, "exotica_collision_detection1");
     ros::NodeHandle nh;
+    //publish to iiwa test
 	ros::Publisher pub_iiwa0_destJoints = nh.advertise<sensor_msgs::JointState>("iiwa0_destJoints", 100, true);
 	ros::Publisher pub_iiwa1_destJoints = nh.advertise<sensor_msgs::JointState>("iiwa1_destJoints", 100, true);
+	//publish to visual servoing
 	ros::Publisher pub_exotica_complete = nh.advertise<std_msgs::Bool>("exotica_complete", 100, true);
 	//for testing purpose, does not publish in kuka mode
 	ros::Publisher pub_iiwa0_reached = nh.advertise<std_msgs::Bool>("iiwa0_reached", 100, true);
@@ -177,12 +204,14 @@ int main(int argc,char **argv)
 	ros::Publisher pub_iiwa0_msrTransform=nh.advertise<iiwa_test::iiwaState>("iiwa0_msrTransform", 100, true);
 	ros::Publisher pub_iiwa1_msrTransform=nh.advertise<iiwa_test::iiwaState>("iiwa1_msrTransform", 100, true);
 	
+	//subscribe from iiwa test
     ros::Subscriber sub_iiwa0_state = nh.subscribe("iiwa0_msrTransform", 1000, posCallback_iiwa0_state);
     ros::Subscriber sub_iiwa1_state = nh.subscribe("iiwa1_msrTransform", 1000, posCallback_iiwa1_state);
 	ros::Subscriber sub_iiwa0_connected = nh.subscribe("iiwa0_connected", 1000, posCallback_iiwa0_connected);
 	ros::Subscriber sub_iiwa1_connected = nh.subscribe("iiwa1_connected", 1000, posCallback_iiwa1_connected);
 	ros::Subscriber sub_iiwa0_reached = nh.subscribe("iiwa0_reached", 1000, posCallback_iiwa0_reached);
 	ros::Subscriber sub_iiwa1_reached = nh.subscribe("iiwa1_reached", 1000, posCallback_iiwa1_reached);
+	//subscribe from visual servoing
 	ros::Subscriber sub_iiwa0_desiredEEInRob = nh.subscribe("iiwa0_desiredEEInRob", 1000, posCallback_iiwa0_desiredEEInRob);
 	ros::Subscriber sub_iiwa1_desiredEEInRob = nh.subscribe("iiwa1_desiredEEInRob", 1000, posCallback_iiwa1_desiredEEInRob);
 	ros::Subscriber sub_iiwa0_desiredEEInRob_sent = nh.subscribe("iiwa0_desiredEEInRob_sent", 1000, posCallback_iiwa0_desiredEEInRob_sent);
@@ -192,14 +221,14 @@ int main(int argc,char **argv)
     //ros::Subscriber sub_iiwa0_currJoints = nh.subscribe("iiwa0_currJoints", 1000, posCallback_iiwa0_currJoints);
     //ros::Subscriber sub_iiwa1_currJoints = nh.subscribe("iiwa1_currJoints", 1000, posCallback_iiwa1_currJoints);
     ros::Rate rate(300);
-
+	
 
     //initialise aico_trajectory.xml
 	//initialise_aico_trajectory();
 
 	Initializer solver, problem;
 	string file_name, solver_name, problem_name;
-		
+	
 	//initialise exotica
 	Server::InitRos(std::shared_ptr<ros::NodeHandle>(new ros::NodeHandle("~")));
 	Server::getParam("ConfigurationFile", file_name);
@@ -221,18 +250,23 @@ int main(int argc,char **argv)
     if (any_problem->type() == "exotica::UnconstrainedTimeIndexedProblem")
     {
 		my_problem = std::static_pointer_cast<UnconstrainedTimeIndexedProblem>(any_problem);
+		T = my_problem->getT();
+		Tau = my_problem->getTau();
 
-        for (int t = 0; t < my_problem->getT(); t++)
+        for (int t = 0; t < T; t+=Tau)
 		{
-			my_problem->setRho("Frame0",1e5,t);
-			my_problem->setRho("Frame1",1e5,t);
-			my_problem->setRho("JointLimit",1e6,t);
+			//my_problem->setRho("Frame0",1e5,t);
+			//my_problem->setRho("Frame1",1e5,t);
+			//my_problem->setRho("JointLimit",1e6,t);
+			my_problem->setRho("Frame0",1e6,t);
+			my_problem->setRho("Frame1",1e6,t);
+			my_problem->setRho("JointLimit",1e4,t);
 		}
 	
 	}
-	
 
 	string target0, target1;
+
 	bool complete_write_traj = false;
 	exotica_complete = true;
 	pub_exotica_complete.publish(exotica_complete);
@@ -243,12 +277,23 @@ int main(int argc,char **argv)
 		pub_iiwa1_reached.publish(iiwa1_reached);
     }*/
 	
+	
 	rate.sleep();
-    ofstream overall_traj_file, kuka_msrTransform_sim_quat;
-	overall_traj_file.open("/home/charlie/Documents/workspace/ros_ws/overall_traj.txt");
-    kuka_msrTransform_sim_quat.open("/home/charlie/Documents/workspace/ros_ws/kuka_msrTransform_sim_quat.txt");
-	
-	
+    ofstream overall_traj_file, kuka_fk_exotica;
+	timer = time(0);   // get time now
+	struct tm * now = localtime( & timer );
+	char millisecbuffer [80];
+	strftime (millisecbuffer,80,"%Y %m %d %H %M %S ",now);
+	strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
+	overall_traj_file.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/overall_traj.txt_"+string(buffer));
+    kuka_fk_exotica.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/kuka_fk_exotica.txt_"+string(buffer));
+    received_kuka0_msrTransform.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/received_kuka0_msrTransform.txt_"+string(buffer));
+    received_kuka1_msrTransform.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/received_kuka1_msrTransform.txt_"+string(buffer));
+    received_kuka_joints.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/received_kuka_joints.txt_"+string(buffer));
+    kuka_traj_quat.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/kuka_traj_quat_"+string(buffer));
+    qstart.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/qstart_"+string(buffer));
+    qend.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/exotica_collision_detection/src/demo/qend_"+string(buffer));
+
 	while(ros::ok){
 		//cout<<exotica_complete<<" "<<iiwa1_connected<<" "<<iiwa1_msrTransform_received<<" "<<iiwa1_reached<<" "<<iiwa1_desiredEEInRob_sent<<endl;
 		//pub_exotica_complete.publish(exotica_complete);
@@ -318,6 +363,13 @@ int main(int argc,char **argv)
 				pub_exotica_complete.publish(exotica_complete);
 				rate.sleep();
 			}
+			
+			/*for (int i = 0; i < 7; i ++){
+                iiwa0_default_currJoints[i] = iiwa0_currJoints[i];
+                iiwa1_default_currJoints[i] = iiwa1_currJoints[i];
+			}*/
+			
+			
 		}
 		if (mode == 1){
 
@@ -334,17 +386,6 @@ int main(int argc,char **argv)
 				rate.sleep();
 			}
 			if (iiwa0_reached && !iiwa1_reached && iiwa0_desiredEEInRob_sent && !iiwa1_desiredEEInRob_sent){
-				/*cout<<"<-----------------------10"<<endl;
-				cout<<"iiwa0_default_msrTransform"<<endl;
-				for(int i = 0; i <12; i ++){
-					cout<<iiwa0_default_msrTransform[i]<<" ";
-				}
-				cout<<endl;
-				cout<<"iiwa0_desiredEEInRob"<<endl;
-				for(int i = 0; i <12; i ++){
-					cout<<iiwa0_desiredEEInRob[i]<<" ";
-				}
-				cout<<endl;*/
 
 
                 target0 = write_traj(0, iiwa0_default_msrTransform, iiwa0_desiredEEInRob);
@@ -367,10 +408,19 @@ int main(int argc,char **argv)
 			}
             if (iiwa0_reached || iiwa1_reached){
                 //replace_aico_trajectory(iiwa0_default_currJoints,iiwa1_default_currJoints);
-                for (int i = 0; i < 7; i ++){
-                    iiwa0_currJoints[i] = iiwa0_default_currJoints[i];
-                    iiwa1_currJoints[i] = iiwa1_default_currJoints[i];
-                }
+//                for (int i = 0; i < 7; i ++){
+//                    iiwa0_currJoints[i] = iiwa0_default_currJoints[i];
+//                    iiwa1_currJoints[i] = iiwa1_default_currJoints[i];
+//                }
+//                for (int i = 0; i < 7; i ++){
+//                    qstart<<iiwa0_default_currJoints[i]<<" ";
+//                }
+//                for (int i = 0; i < 7; i ++){
+//                    qstart<<iiwa1_default_currJoints[i]<<" ";
+//                }
+//                qstart<<endl;
+//                std::copy(std::begin(iiwa0_default_currJoints), std::end(iiwa0_default_currJoints), std::begin(iiwa0_currJoints));
+//                std::copy(std::begin(iiwa1_default_currJoints), std::end(iiwa1_default_currJoints), std::begin(iiwa1_currJoints));
             }
 
 
@@ -378,33 +428,65 @@ int main(int argc,char **argv)
 		if (complete_write_traj){
 			//any_solver->specifyProblem(any_problem);
 
+
+            if (mode == 1){
+                std::copy(std::begin(iiwa0_default_currJoints), std::end(iiwa0_default_currJoints), std::begin(iiwa0_currJoints));
+                std::copy(std::begin(iiwa1_default_currJoints), std::end(iiwa1_default_currJoints), std::begin(iiwa1_currJoints));
+            }
+//            for (int i = 0; i < 7; i ++){
+//                qstart<<iiwa0_default_currJoints[i]<<" ";
+//            }
+//            for (int i = 0; i < 7; i ++){
+//                qstart<<iiwa1_default_currJoints[i]<<" ";
+//            }
+//            qstart<<endl;
+
 			Eigen::VectorXd q = Eigen::VectorXd::Zero(any_problem->N);
 
 			for (int i = 0; i < 7; i ++){
-				q(i) = iiwa0_currJoints[i];
-				q(i+7) = iiwa1_currJoints[i];
-			}		
-		
+                q(i) = iiwa0_currJoints[i];
+                q(i+7) = iiwa1_currJoints[i];
+				
+			}	
+
+
+            for (int i = 0; i < 7; i ++){
+                received_kuka_joints << iiwa0_currJoints[i] <<" ";
+            }
+            for (int i = 0; i < 7; i ++){
+                received_kuka_joints << iiwa1_currJoints[i] <<" ";
+            }
+            received_kuka_joints<<endl;
+						
+            cout<<"before set start state "<<endl;
             my_problem->setStartState(q);
             my_problem->getScene()->removeTrajectory("Target0");
             my_problem->getScene()->removeTrajectory("Target1");
             my_problem->getScene()->addTrajectory("Target0", target0);
             my_problem->getScene()->addTrajectory("Target1", target1);
-			any_solver->Solve(traj_solution);
 
-
+            any_solver->Solve(traj_solution);
 			//cout<<"-------------------------------------------"<<endl;
 			iiwa0_desiredEEInRob_sent = false;
 			iiwa1_desiredEEInRob_sent = false;
 			complete_write_traj = false;
-			
+
+
+//            for (int i = 0; i < 14; i ++){
+//                qend<<traj_solution.row(traj_solution.rows()-1)[i]<<" ";
+//            }
+//            qend<<endl;
 			
             int i = 0;
             cout<<"traj_solution size "<<traj_solution.rows()<<endl;
 
+			
+
+
             while (i < traj_solution.rows()){
 				ros::spinOnce();
-                
+                double tmp1[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+                double tmp2[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
                 if (iiwa0_reached or iiwa1_reached){
                     sensor_msgs::JointState msg0, msg1;
                     for (int j = 0; j <7; j ++){
@@ -420,42 +502,79 @@ int main(int argc,char **argv)
 					iiwa0_reached = false;
 					iiwa1_reached = false;
 					overall_traj_file<<traj_solution.row(i)<<endl;
-					cout<<i<<endl;
-					i = i + 1;
+					cout<<traj_solution.row(i)<<endl;
+					//cout<<i<<endl;
+				
+                    my_problem->getScene()->getSolver().publishFrames();
 
+ 					my_problem->getScene()->Update(traj_solution.row(i), Tau*i);
+		            for (int i = 0; i < 3; i ++){
+		                for (int j = 0; j < 4; j ++){
+		                    tmp1[4*i+j] = getFrame(my_problem->getScene()->getSolver().FK("iiwa_0_suture_driver", KDL::Frame(),"iiwa_0_base_link", KDL::Frame()))(i,j);
+		                }
+		            }
+		            for (int i = 0; i < 3; i ++){
+		                for (int j = 0; j < 4; j ++){
+		                    tmp2[4*i+j] = getFrame(my_problem->getScene()->getSolver().FK("iiwa_1_needle_driver", KDL::Frame(),"iiwa_1_base_link", KDL::Frame()))(i,j);
+		                }
+		            }
+		            int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		            kuka_fk_exotica << nowms << " ";
+		            
+		            
+		            double tmp = 0;
+		            tmp = tmp1[1];
+		            tmp1[1] = tmp1[4];
+		            tmp1[4] = tmp;
+		            
+		            tmp = tmp1[2];
+		            tmp1[2] = tmp1[8];
+		            tmp1[8] = tmp;		            
+		            
+		            tmp = tmp1[6];
+		            tmp1[6] = tmp1[9];
+		            tmp1[9] = tmp;
+
+		            tmp = tmp2[1];
+		            tmp2[1] = tmp2[4];
+		            tmp2[4] = tmp;
+		            
+		            tmp = tmp2[2];
+		            tmp2[2] = tmp2[8];
+		            tmp2[8] = tmp;		            
+		            
+		            tmp = tmp2[6];
+		            tmp2[6] = tmp2[9];
+		            tmp2[9] = tmp;
+	            		            
+		            for (int i = 0; i < 12; i ++){
+		                kuka_fk_exotica<<tmp1[i]<<" ";
+		            }
+		            for (int i = 0; i < 12; i ++){
+		                kuka_fk_exotica<<tmp2[i]<<" ";
+		            }
+		            kuka_fk_exotica<<endl;					
+					
+					
+					
+					i = i + 1;
                 }
                 //my_problem->getScene()->Update(traj_solution.row(i).transpose(), i);
 
+
                 if (mode == 1){
-                    my_problem->getScene()->getSolver().publishFrames();
-                    double tmp1[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-                    double tmp2[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-                    for (int i = 0; i < 3; i ++){
-                        for (int j = 0; j < 4; j ++){
-                            tmp1[4*i+j] = getFrame(my_problem->getScene()->getSolver().FK("iiwa_0_suture_driver", KDL::Frame(),"iiwa_0_base_link", KDL::Frame()))(i,j);
-                        }
-                    }
-                    for (int i = 0; i < 3; i ++){
-                        for (int j = 0; j < 4; j ++){
-                            tmp2[4*i+j] = getFrame(my_problem->getScene()->getSolver().FK("iiwa_1_needle_driver", KDL::Frame(),"iiwa_1_base_link", KDL::Frame()))(i,j);
-                        }
-                    }
-                    for (int i = 0; i < 12; i ++){
-                        kuka_msrTransform_sim_quat<<tmp1[i]<<" ";
-                    }
-                    kuka_msrTransform_sim_quat<<endl;
-                    
+                
                     
                     iiwa_test::iiwaState msg0_iiwaState;
 		            for (int j = 0; j <12; j ++){
-		                msg0_iiwaState.transform.data.push_back(tmp1[i]);
+		                msg0_iiwaState.transform.data.push_back(tmp1[j]);
 		            }
 		            for (int j = 0; j <7; j ++){
 		                msg0_iiwaState.jointState.data.push_back(traj_solution.row(i)[j]);
 		            }
 		            iiwa_test::iiwaState msg1_iiwaState;
 		            for (int j = 0; j <12; j ++){
-		                msg1_iiwaState.transform.data.push_back(tmp2[i]);
+		                msg1_iiwaState.transform.data.push_back(tmp2[j]);
 		            }
 		            for (int j = 0; j <7; j ++){
 		                msg1_iiwaState.jointState.data.push_back(traj_solution.row(i)[j+7]);
@@ -466,43 +585,13 @@ int main(int argc,char **argv)
                     
                     
                 }
-                /*
-				overall_traj_file<<traj_solution.row(i)<<endl;
-				sensor_msgs::JointState msg0, msg1;
-				for (int j = 0; j <7; j ++){
-					msg0.name.push_back("iiwa0 joint " + std::to_string(j));
-					msg0.position.push_back(traj_solution.row(i)[j]);
-					msg1.name.push_back("iiwa1 joint " + std::to_string(j));
-					msg1.position.push_back(traj_solution.row(i)[j+7]);
-				}				
-				pub_iiwa0_destJoints.publish(msg0);
-				pub_iiwa1_destJoints.publish(msg1);
-				rate.sleep();	
-                //usleep(sleepTime);
-                usleep(500);
-				i = i + 1;		
-                */
-				
-                /*if (mode == 1){
-					iiwa0_reached = true;
-					iiwa1_reached = false;
-					pub_iiwa0_reached.publish(iiwa0_reached);
-					pub_iiwa1_reached.publish(iiwa1_reached);
-					rate.sleep();
-                }*/
-			}
-			for (int i = 0; i < 7; i ++){
-                iiwa0_default_currJoints[i] = traj_solution.row(traj_solution.rows()-1)[i];
-                iiwa1_default_currJoints[i] = traj_solution.row(traj_solution.rows()-1)[i+7];
 			}
 
-            /*if (mode == 1){
-				iiwa0_reached = true;
-				iiwa1_reached = false;
-				pub_iiwa0_reached.publish(iiwa0_reached);
-				pub_iiwa1_reached.publish(iiwa1_reached);
-				rate.sleep();
-            }*/
+            for (int i = 0; i < 7; i ++){
+                iiwa0_default_currJoints[i] = traj_solution.row(traj_solution.rows()-1)[i];
+                iiwa1_default_currJoints[i] = traj_solution.row(traj_solution.rows()-1)[i+7];
+            }
+
 			exotica_complete = true;
 			cout<<"exotica_complete = "<<exotica_complete;
 			pub_exotica_complete.publish(exotica_complete);
@@ -571,9 +660,15 @@ string write_traj(int iiwaNo, double *iiwa_start_trans_inRob, double *iiwa_end_t
 	
 	Erl::Transformd rHee_start_trans= Functions::Eigen2Erl(rHee_start);
 	Erl::Transformd rHee_end_trans = Functions::Eigen2Erl(rHee_end);
-	string out = "1\n2\t8\n0\t"+std::to_string(rHee_start_trans.getX()/1000.0)+"\t"+std::to_string(rHee_start_trans.getY()/1000.0)+"\t"+std::to_string(rHee_start_trans.getZ()/1000.0)+"\t"+std::to_string(rHee_start_trans.getQuaternion().x())+"\t"+std::to_string(rHee_start_trans.getQuaternion().y())+"\t"+std::to_string(rHee_start_trans.getQuaternion().z())+"\t"+std::to_string(rHee_start_trans.getQuaternion().w())+"\n10\t"+std::to_string(rHee_end_trans.getX()/1000.0)+"\t"+std::to_string(rHee_end_trans.getY()/1000.0)+"\t"+std::to_string(rHee_end_trans.getZ()/1000.0)+" "+std::to_string(rHee_end_trans.getQuaternion().x())+"\t"+std::to_string(rHee_end_trans.getQuaternion().y())+"\t"+std::to_string(rHee_end_trans.getQuaternion().z())+"\t"+std::to_string(rHee_end_trans.getQuaternion().w());
+	string out = "1\n2\t8\n0\t"+std::to_string(rHee_start_trans.getX()/1000.0)+"\t"+std::to_string(rHee_start_trans.getY()/1000.0)+"\t"+std::to_string(rHee_start_trans.getZ()/1000.0)+"\t"+std::to_string(rHee_start_trans.getQuaternion().x())+"\t"+std::to_string(rHee_start_trans.getQuaternion().y())+"\t"+std::to_string(rHee_start_trans.getQuaternion().z())+"\t"+std::to_string(rHee_start_trans.getQuaternion().w())+"\n"+std::to_string(Tau*T)+"\t"+std::to_string(rHee_end_trans.getX()/1000.0)+"\t"+std::to_string(rHee_end_trans.getY()/1000.0)+"\t"+std::to_string(rHee_end_trans.getZ()/1000.0)+" "+std::to_string(rHee_end_trans.getQuaternion().x())+"\t"+std::to_string(rHee_end_trans.getQuaternion().y())+"\t"+std::to_string(rHee_end_trans.getQuaternion().z())+"\t"+std::to_string(rHee_end_trans.getQuaternion().w());
 	
 
+	
+	kuka_traj_quat<<rHee_end_trans.getX()/1000.0<<" ";
+	kuka_traj_quat<<rHee_end_trans.getY()/1000.0<<" ";
+	kuka_traj_quat<<rHee_end_trans.getZ()/1000.0<<" ";
+	kuka_traj_quat<<endl;
+	
 	
 	return out;	
 	

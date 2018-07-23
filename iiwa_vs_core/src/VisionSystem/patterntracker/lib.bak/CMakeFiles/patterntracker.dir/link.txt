@@ -1,0 +1,2 @@
+/usr/bin/ar cr libpatterntracker.a  CMakeFiles/patterntracker.dir/circlesgrid.cpp.o CMakeFiles/patterntracker.dir/tracker_pattern.cpp.o CMakeFiles/patterntracker.dir/tracker.cpp.o CMakeFiles/patterntracker.dir/tracker_keydot.cpp.o
+/usr/bin/ranlib libpatterntracker.a

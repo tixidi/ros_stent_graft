@@ -41,6 +41,9 @@
 #include <ros/ros.h>
 #endif
 
+#include <ctime>
+#include <chrono>
+
 
 class KukaMotionPlanning: public QThread
 {
@@ -150,6 +153,7 @@ private:
     bool iiwa1_msrTransform_received = true;
     int iiwa0_state_count = -1;
     int iiwa1_state_count = -1;
+    ofstream received_kuka0_msrTransform, received_kuka1_msrTransform, iiwa0_transformd_file, iiwa1_transformd_file;
 	Matrix4d iiwa0_currentMartix4d, iiwa1_currentMartix4d;
 	Erl::Transformd iiwa0_currentTransformd, iiwa1_currentTransformd;
 	//Eigen::Matrix<double, 7, 1> iiwa0_currJoints, iiwa1_currJoints;

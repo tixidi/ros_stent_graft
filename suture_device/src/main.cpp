@@ -13,6 +13,7 @@ footPadel_philip *footPadel;
 
 void posCallback(const std_msgs::Bool::ConstPtr& msg)
 {
+	cout <<"msg->data " << msg->data << endl;
 	if(msg->data){
 		cout<<"run stitch"<<endl;
 		//to do: run single stitch
@@ -44,7 +45,6 @@ int main(int argc, char *argv[])
 			std_msgs::Float32 msg;
 			deviceInfomation disInfo= sutureDevice->getAllCtrlInfomation();
 			msg.data = disInfo.msrPos[0];
-
 			pub.publish(msg);
 			
 			rate.sleep();

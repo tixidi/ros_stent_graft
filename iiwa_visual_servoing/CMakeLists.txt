@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  sensor_msgs
 )
 
 #find cvblob
@@ -186,6 +187,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/../devel/include/
 )
 
 
@@ -385,6 +387,8 @@ ${REF_LIB}
 -lOMD
 ${catkin_LIBRARIES}
 )
+
+add_dependencies(iiwaVisualServoing exotica ${catkin_EXPORTED_TARGETS})
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/iiwa_visual_servoing.cpp

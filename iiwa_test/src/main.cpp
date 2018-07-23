@@ -37,6 +37,10 @@ ros::Publisher pub_iiwa_msrTransform;
 ros::Publisher pub_iiwa_currJoints;
 int rate_hz = 300;
 
+time_t timer;
+char buffer [80];
+long int ms;
+
 /*void posCallback_iiwa_currJoints(const sensor_msgs::JointState::ConstPtr& msg){
 	ros::Rate rate(rate_hz);
 	sensor_msgs::JointState tmp;
@@ -318,17 +322,18 @@ int main(int argc,char **argv)
 		if (mode == 1 && std::stoi(kukaNo)==0){
 			//double tmp[12] = {-8.642523e-01, -4.850827e-01, 1.332769e-01, 8.657560e-02, -1.584119e-04, -2.646708e-01, -9.643388e-01, 8.065320e-03, 5.030586e-01, -8.334531e-01, 2.286655e-01, 1.536100e-01};
 			double tmp[12] = {-0.18725492,  0.84542901, -0.50018916, -0.59726775, -0.97520191, -0.09886336,  0.19798807, -0.25512601, 0.11793113,  0.52485612,  0.84297739,  0.40726137};
-			for (int i = 0; i < 3; i ++){
+			for (int i = 0; i < 12; i ++){
 				iiwa_msrTransform[i] = tmp[i];
 			}
-			for (int i = 0; i < 3; i ++){
-				iiwa_msrTransform[i] = tmp[i];
-			}
+
 	
 		}
 		
 		if (mode == 1 && std::stoi(kukaNo)==1){
 			double tmp[12] = { 0.15776873, -0.14297075,  0.97707544,  0.37679855, -0.98729879, -0.04151556,  0.15334503, -0.49452684, 0.01863774, -0.98885802, -0.14770564,  0.43736135};	
+			for (int i = 0; i < 12; i ++){
+				iiwa_msrTransform[i] = tmp[i];
+			}
 		}
 		
 		
@@ -358,14 +363,17 @@ int main(int argc,char **argv)
 		
 
 		cout<<"finished initialisation"<<endl;
-		
-		
+		timer = time(0);   // get time now
+		struct tm * now = localtime( & timer );
+		char millisecbuffer [80];
+		strftime (millisecbuffer,80,"%Y %m %d %H %M %S ",now);
+		strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
 		ofstream outfile1, outfile_received_destJoints, outfile_received_destJoints_int, outfile_kuka_traj, outfile_kuka_msrTransform;
-		outfile_kuka_traj.open("kuka_trajectory1.txt");
-		outfile2.open("int_trajectory2.txt");
-		outfile_received_destJoints.open("received_destJoints.txt");
-		outfile_received_destJoints_int.open("received_destJoints_int.txt");
-		outfile_kuka_msrTransform.open("kuka_msrTransform.txt");
+		outfile_kuka_traj.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test/src/demo/kuka_trajectory.txt_" + string(buffer));
+		//outfile2.open("int_trajectory2.txt");
+		outfile_received_destJoints.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test/src/demo/received_destJoints.txt_" + string(buffer));
+		outfile_received_destJoints_int.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test/src/demo/received_destJoints_int.txt_" + string(buffer));
+		outfile_kuka_msrTransform.open("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_test/src/demo/kuka_msrTransform.txt_" + string(buffer));
 		
 		outfile_kuka_traj<<currJoints[0]<<" "<<currJoints[1]<<" "<<currJoints[2]<<" "<<currJoints[3]<<" "<<currJoints[4]<<" "<<currJoints[5]<<" "<<currJoints[6]<<endl;
 		//ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/traj_solution");	
@@ -411,7 +419,7 @@ int main(int argc,char **argv)
 
 						if (mode ==0){
 								kuka.setJoints(newJoints);
-								std::this_thread::sleep_for(std::chrono::milliseconds(10));
+								//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 								currTmpJoints = kuka.getJoints();
 								//std::this_thread::sleep_for(std::chrono::milliseconds(250));
 								for (int j = 0; j<7;j++){
@@ -422,19 +430,35 @@ int main(int argc,char **argv)
 						if (mode ==1)
 								currTmpJoints = newJoints;
 					}	
-						
+					
 					//check if all joints are reached
 					int noJointsReached = 0;
+					bool complete = false;
 					if (mode == 0){
-						for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
-							if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.005){
-								noJointsReached = 0;
-								kuka.setJoints(destJoints);
-								std::this_thread::sleep_for(std::chrono::milliseconds(10));
-								currJoints = kuka.getJoints();
+						kuka.setJoints(destJoints);
+						currJoints = kuka.getJoints();
+						while(!complete){
+							currJoints = kuka.getJoints();
+							for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
+								if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+								//if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+									complete = false;
+									break;
+								}else{
+									complete = true;
+								}
 							}
 						}
-					}					
+						/*for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
+							//if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+							if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+								noJointsReached = 0;
+								kuka.setJoints(destJoints);
+								//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+								currJoints = kuka.getJoints();
+							}
+						}*/
+					}				
 					/////////////////////
 //							for(int i = 0; i < 12; i ++)
 //									cout<<msg_msrTransform.data[i]<<endl;
@@ -446,9 +470,7 @@ int main(int argc,char **argv)
 							outfile_kuka_traj<<currJoints[j]<<" ";
 						}
 						outfile_kuka_traj<<endl;
-					}
-					if (mode ==1)
-						currJoints = destJoints;
+
 					
 					for (int i = 0 ; i <7; i ++){
 						outfile_received_destJoints<<destJoints[i]<<" ";
@@ -460,11 +482,6 @@ int main(int argc,char **argv)
 					
 					cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
                     Erl::Transformd kuka_getMsrTransform = kuka.getMsrTransform();
-                    /*if (mode == 1){
-                        tf::TransformListener tf;
-                        tf::StampedTransform tfLink2WrtBaseLink;
-                        tf.lookupTransform("world_frame", "exotica/Target0", ros::Time(0), tfLink2WrtBaseLink);
-                    }*/
 
 
 					
@@ -530,8 +547,18 @@ int main(int argc,char **argv)
                     //rate.sleep();
 						
 
-
-
+					}
+					if (mode ==1){
+						currJoints = destJoints;
+		                pub_iiwa_reached.publish(true);
+		                rate.sleep();
+				        for (int i = 0 ; i <7; i ++){
+							outfile_received_destJoints<<destJoints[i]<<" ";
+							outfile_received_destJoints_int<<destJoints[i]<<" ";
+						}
+						outfile_received_destJoints<<endl;
+						outfile_received_destJoints_int<<endl;	
+                    }
 				
 				
 

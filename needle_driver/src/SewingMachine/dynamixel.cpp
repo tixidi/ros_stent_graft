@@ -281,6 +281,7 @@ void dxl_ping( int id )
 	gbInstructionPacket[LENGTH] = 2;
 	
 	dxl_txrx_packet();
+	
 }
 
 int dxl_read_byte( int id, int address )

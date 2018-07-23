@@ -69,12 +69,13 @@ def talker():
 		#	time.sleep(1)
         #if (i > -1 and not exotica_complete):
 		print count
+		count += 1
 		msg = Float64MultiArray()
 			#msg.data = [-0.864252, -0.485083, 0.133277, 0.0865756, -0.000158412, -0.264671, -0.964339, 0.00806532, 0.503059, -0.833453, 0.228665, 0.15361]
 			#msg.data = [-8.642523e-01, -4.850827e-01, 1.332769e-01, 8.657560e-02, -1.584119e-04, -2.646708e-01, -9.643388e-01, 8.065320e-03, 5.030586e-01, -8.334531e-01, 2.286655e-01, 1.536100e-01]
 			#msg.data = [0.23763151,	-0.07399702,	0.02910623,	0.60840166,	0.57966368,	-0.4911481,	-0.22937084]
 		msg.data = data[count,1:8]
-			#print msg.data
+		print msg.data
 			#rospy.loginfo(msg)
 		pub.publish(msg)
 		rate.sleep()

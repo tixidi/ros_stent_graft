@@ -6,6 +6,8 @@
 #include <std_msgs/Bool.h> 
 #include <std_msgs/Float32.h> 
 #include <sensor_msgs/JointState.h> 
+#include <std_msgs//Float64MultiArray.h>
+#include <geometry_msgs/Wrench.h>
 #include <iostream>
 #include <string> 
 #include <fstream>
@@ -63,6 +65,26 @@ void posCallback6(const std_msgs::Bool::ConstPtr& msg){
 			kuka1_reached = true;
 }
 
+//get kuka0 current reach status
+void posCallback_iiwa0_reached (const std_msgs::Bool::ConstPtr& msg){
+	//cout<<msg->data<<endl;
+	if(msg->data)
+		kuka0_reached = true;
+}
+
+//get kuka1 current reach status
+void posCallback_iiwa1_reached (const std_msgs::Bool::ConstPtr& msg){
+	//cout<<msg->data<<endl;
+	if(msg->data)	
+		kuka1_reached = true;
+}
+
+//read mandrel force
+void posCallback_read_force (const geometry_msgs::Wrench::ConstPtr& msg){
+
+}
+
+
 //wait for key input
 int kbhit(void){
 		struct timeval tv;
@@ -104,13 +126,21 @@ int main(int argc, char **argv) {
 		ros::Publisher pub1 = nh.advertise<std_msgs::Int8>("video_record_command", 100);
 		ros::Publisher pub2 = nh.advertise<std_msgs::Bool>("suture_device_command", 100);
 		//ros::Publisher pub3 = nh.advertise<sensor_msgs::JointState>("kuka0_command", 100);
-		//ros::Publisher pub4 = nh.advertise<sensor_msgs::JointState>("kuka1_command", 100);		
+		//ros::Publisher pub4 = nh.advertise<sensor_msgs::JointState>("kuka1_command", 100);
+		ros::Publisher pub_iiwa0_destJoints = nh.advertise<sensor_msgs::JointState>("iiwa0_destJoints", 100);
+		//ros::Publisher pub_iiwa1_destJoints = nh.advertise<sensor_msgs::JointState>("iiwa1_destJoints", 100);		
+		ros::Publisher pub_needle_driver = nh.advertise<std_msgs::Bool>("needle_driver_command", 100);
+		ros::Publisher pub_mandrel_posrodr = nh.advertise<std_msgs::Float64MultiArray>("mandrel_posrodr", 100);
+		ros::Publisher pub_toolmandrel_traj= nh.advertise<std_msgs::String>("fname_traj_toolmandrel", 100);
 		ros::Subscriber sub1 = nh.subscribe("tools_pose", 1000, posCallback1);
 		ros::Subscriber sub2 = nh.subscribe("read_suture_device_angle", 1000, posCallback2);
-		ros::Subscriber sub3 = nh.subscribe("kuka0_pose", 1000, posCallback3);
-		ros::Subscriber sub4 = nh.subscribe("kuka1_pose", 1000, posCallback4);
-		ros::Subscriber sub5 = nh.subscribe("kuka0_pose_done", 1000, posCallback5);
-		ros::Subscriber sub6 = nh.subscribe("kuka1_pose_done", 1000, posCallback6);
+		//ros::Subscriber sub3 = nh.subscribe("kuka0_pose", 1000, posCallback3);
+		//ros::Subscriber sub4 = nh.subscribe("kuka1_pose", 1000, posCallback4);
+		//ros::Subscriber sub5 = nh.subscribe("kuka0_pose_done", 1000, posCallback5);
+		//ros::Subscriber sub6 = nh.subscribe("kuka1_pose_done", 1000, posCallback6);
+		ros::Subscriber sub_iiwa0_reached = nh.subscribe("iiwa0_reached", 1000, posCallback_iiwa0_reached );
+		ros::Subscriber sub_iiwa1_reached = nh.subscribe("iiwa1_reached", 1000, posCallback_iiwa1_reached );
+		ros::Subscriber sub_force_sensor = nh.subscribe("read_mandrel_force", 1000, posCallback_read_force);
 		srand(time(0));
 		ros::Rate rate(10);
 		
@@ -134,18 +164,26 @@ int main(int argc, char **argv) {
 		kukaJointsFile.open(strTemp .c_str());
 
 
-
+		
 		//perform optimisation
 		//system("python /home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/scripts/example_aico_trajectory_cost_mul.py");
 
 		int mode = int(stoi(argv[1])); //0:kuka 1:simulation
 		
-		if (mode==0){
+
+		ifstream sewingSlot("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/kuka_control/src/sewing_slot.txt");
+		std_msgs::String msg_fname_traj_toolmandrel;
+		msg_fname_traj_toolmandrel.data = "/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-30-20-27.txt_smooth_quat";
+		pub_toolmandrel_traj.publish(msg_fname_traj_toolmandrel);
+			
 				
+		if (mode==0){
+				/*
 				//generate trajectory and read trajectory
 				//system("python /home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/scripts/example_aico_trajectory.py 1");
 
-				ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/traj_solution");
+				ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/traj_solution_smooth_r002");
+				//ifstream infile("/home/charlie/Documents/workspace/ros_ws/src/stentgraft_sewing/stentgraft_sewing_planning/resources/overall_traj_bk_201806081723.txt");
 				double tmp;
 				std::vector<vector<double>> jointsPose;
 				int count0 = 0,count1 = 0, update_rate = 10, count = 0;;
@@ -183,7 +221,7 @@ int main(int argc, char **argv) {
 						
 					}
 					jointsPose.pop_back();
-
+*/
 
 		/*			cout<<jointsData.size()<<endl;
 						for(int j = 0; j <jointsData.size();j++)
@@ -215,6 +253,14 @@ int main(int argc, char **argv) {
 
 				while(ros::ok()) {
 					ros::spinOnce();
+					//run needle driver
+					pub_needle_driver.publish(true);
+					//publish mandrel posrodr
+					std_msgs::Float64MultiArray msg_mandrel;
+					for(int i = 0; i < 6; i ++){
+						msg_mandrel.data.push_back(0);
+					}
+					pub_mandrel_posrodr.publish(msg_mandrel);
 					if (kbhit()){
 						int key = cin.get();
 						if (key==int('r')||key==int('s')||key==int('1')||key==int('2')){
@@ -237,34 +283,43 @@ int main(int argc, char **argv) {
 							//cout<<"bool value "<<msg.data<<endl;
 							cout<<"run single stitch"<<endl;
 							pub2.publish(msg);
+							rate.sleep();
 						}
 
+					}
+					
+					double posrodr;
+					std_msgs::Float64MultiArray msg_posrodr;
+					for (int i = 0; i <6; i ++){
+						sewingSlot>>posrodr;
+						msg_posrodr.data.push_back(posrodr);
 					}
 /*
 						if (count0<jointsPose.size()){
 							//if (kuka0_reached && kuka1_reached){
 							if (kuka0_reached){
-									sensor_msgs::JointState msg;	
-									for (int i = 0; i <7; i ++){
-											msg.name.push_back("kuka0 joint "+to_string(i));
-											msg.position.push_back(jointsPose[count0][i]);
-											cout<<jointsPose[count0][i]<<" ";
-									}
-									cout<<endl;
-									rate.sleep();
-									pub3.publish(msg);
-									kuka0_reached = false;
-									count0++;
+								sensor_msgs::JointState msg;	
+								for (int i = 0; i <7; i ++){
+										msg.name.push_back("iiwa0 joint "+to_string(i));
+										msg.position.push_back(jointsPose[count0][i]);
+										cout<<jointsPose[count0][i]<<" ";
+								}
+								cout<<endl;
+								rate.sleep();
+								pub_iiwa0_destJoints.publish(msg);
+								kuka0_reached = false;
+								count0++;
 							}
 						}
 
-
+*/
+/*
 						if (count0<jointsPose.size()){
 							//if (kuka0_reached && kuka1_reached){
 							//if (kuka1_reached){
 									sensor_msgs::JointState msg;	
 									for (int i = 0; i <7; i ++){
-											msg.name.push_back("kuka1 joint "+to_string(i));
+											msg.name.push_back("iiwa1 joint "+to_string(i));
 											msg.position.push_back(jointsPose[count0][i+7]);
 											//cout<<count0<<" " << jointsPose[count0][i+7]<<" ";
 									}

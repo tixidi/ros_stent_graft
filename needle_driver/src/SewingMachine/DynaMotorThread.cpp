@@ -30,6 +30,11 @@ void DynaMotorThread::setPositionLooper(int pos)
      dxl_write_word( LOOPERSERVO, P_GOAL_POSITION_L, pos );
 }
 
+void DynaMotorThread::setPositionMandrel(int pos)
+{
+     dxl_write_word( MANDRELSERVO, P_GOAL_POSITION_L, pos );
+}
+
 // Print communication result
 void DynaMotorThread::PrintCommStatus(int CommStatus)
 {

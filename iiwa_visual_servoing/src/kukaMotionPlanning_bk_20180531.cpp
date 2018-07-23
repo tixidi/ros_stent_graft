@@ -24,7 +24,6 @@ KukaMotionPlanning::KukaMotionPlanning()
     fname_ee_robpos = strdup((SRC_FILES_DIR+"VisionSystem/caliInfo/test/eeRobotPosture.txt").c_str());
     fname_robotJoints0 = "Data/RobotJoint0.txt";
 
-
     //iiwa
 #ifdef iiwaOn
     iiwaControl *tmp0 = new iiwaControl(0);
@@ -418,7 +417,7 @@ void KukaMotionPlanning:: calibRobot()
 void KukaMotionPlanning:: pathPlanning()
 {
     ////////////////////////////////////////
-    static int RunRobotIndex = 0;
+    static int RunRobotIndex = 1;
     static int status = 20;
     /*
      * 20: bimanual: read & plot trajectory     *
@@ -461,7 +460,8 @@ void KukaMotionPlanning:: pathPlanning()
     else if (RunRobotIndex == 1)
     {
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat").c_str());
-				trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+                //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
+                trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat_int").c_str());
     }
     else if (RunRobotIndex == 2)
     {

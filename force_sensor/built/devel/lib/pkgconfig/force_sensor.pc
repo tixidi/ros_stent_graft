@@ -1,0 +1,8 @@
+prefix=/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/built/devel
+
+Name: force_sensor
+Description: Description of force_sensor
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/charlie/Documents/workspace/ros_ws/src/stentgraft_planning/force_sensor/built/devel/lib 
+Requires: 

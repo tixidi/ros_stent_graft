@@ -23,7 +23,7 @@ Faulharbermotor::Faulharbermotor()
 
     //open port
     //sertialPort1 =new QSerialPort("Com3");
-    sertialPort1 =new QSerialPort("/dev/ttyUSB0");
+    sertialPort1 =new QSerialPort("/dev/ttyUSB1");
 
     sertialPort1->open(QIODevice::ReadWrite);
 
