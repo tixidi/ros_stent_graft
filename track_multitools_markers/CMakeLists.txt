@@ -174,6 +174,7 @@ ${ARUCO_PATH}/markerdetector.cpp
 
 
 
+
 add_executable(track_multitools_markers src/main.cpp src/mycvdrawingutils.cpp src/mymarkerdetector.cpp ${ARUCO_HEADERS} ${ARUCO_SOURCES}
 #patterntracker/circlesgrid.cpp 
 src/patterntracker/tracker.cpp 
@@ -190,7 +191,10 @@ src/patterntracker/tracker_general.cpp
 )
 
 
+
 target_link_libraries(track_multitools_markers ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+add_dependencies(track_multitools_markers ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

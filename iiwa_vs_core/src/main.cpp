@@ -32,7 +32,7 @@ int   main(int argc, char **argv)
         cerr<<"Usage: [kuka index 0:left 1:right] [mode 0:kuka 1:test]"<<endl;
         return 0;
     }
-    if (int(atoi(argv[1]))>1 ||int(atoi(argv[1]))<0 ){
+    if (int(atoi(argv[1]))>2 ||int(atoi(argv[1]))<0 ){
             cerr<<"Invalid kuka index [0:left 1:right]"<<endl;
             return 0;
     }

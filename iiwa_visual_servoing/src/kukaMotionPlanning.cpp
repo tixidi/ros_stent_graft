@@ -643,7 +643,7 @@ void KukaMotionPlanning:: calibRobot()
 void KukaMotionPlanning:: pathPlanning()
 {
     ////////////////////////////////////////
-    static int RunRobotIndex = 1;
+    static int RunRobotIndex = 0;
     static int status = 20;
     /*
      * 20: bimanual: read & plot trajectory     *
@@ -680,6 +680,7 @@ void KukaMotionPlanning:: pathPlanning()
         //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-21-18-28.txt_smooth_quat"; //for iiwa0
 
         trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat_301_900").c_str());
+        trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-07-24-19-35-25.txt_smooth_quat").c_str());
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-04-19-16-03-46_s.txt_inserted_test_smooth_quat").c_str());
         //trajectFile = strdup((SRC_FILES_DIR+"trajectories/toolmandrel_2018-05-30-20-35.txt_smooth_quat").c_str());
         //trajectFile = "Documents/workspace/ros_ws/src/stentgraft_planning/iiwa_visual_servoing/src/trajectories/toolmandrel_2018-05-10-15-23.txt_smooth_quat"; //for iiwa1
@@ -917,56 +918,56 @@ void KukaMotionPlanning:: pathPlanning()
 
     else if(status == 23)
     {
-        // compute robots' initial pose via vision
-        ////////// Read all configs ///////////////
-        // Read handeye ------------
-        ifstream f_stream_r2c0(fname_cHr0), f_stream_r2c1(fname_cHr1);
-        static Matrix4d rob0inCam_mat4d, rob1inCam_mat4d;
-        for (int i=0; i<4; i++)
-        {
-            for (int j=0; j<4; j++)
-                {
-                    f_stream_r2c0 >> rob0inCam_mat4d(i,j);
-                    f_stream_r2c1 >> rob1inCam_mat4d(i,j);
-                }
-        }
-        cout << "rob0inCam_mat4d " << endl << rob0inCam_mat4d << endl;
-        cout << "rob1inCam_mat4d " << endl << rob1inCam_mat4d << endl;
-
-        // Handeye update ------------------
-        //if (RunRobotIndex == 0)
-        {
-            Functions::Eigen2CVMat(rob0inCam_mat4d).copyTo(cHr0_updated);
-            robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob0inCam_mat4d);
-            for (int i=0; i<handeye_window; i++)
+            // compute robots' initial pose via vision
+            ////////// Read all configs ///////////////
+            // Read handeye ------------
+            ifstream f_stream_r2c0(fname_cHr0), f_stream_r2c1(fname_cHr1);
+            static Matrix4d rob0inCam_mat4d, rob1inCam_mat4d;
+            for (int i=0; i<4; i++)
             {
-                robot0InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
-                robot0InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
+                for (int j=0; j<4; j++)
+                    {
+                        f_stream_r2c0 >> rob0inCam_mat4d(i,j);
+                        f_stream_r2c1 >> rob1inCam_mat4d(i,j);
+                    }
             }
-        }
-        //if (RunRobotIndex == 1)
-        {
-            Functions::Eigen2CVMat(rob1inCam_mat4d).copyTo(cHr1_updated);
-            robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob1inCam_mat4d);
-            for (int i=0; i<handeye_window; i++)
-            {
-                robot1InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
-                robot1InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
-            }
-        }
+            cout << "rob0inCam_mat4d " << endl << rob0inCam_mat4d << endl;
+            cout << "rob1inCam_mat4d " << endl << rob1inCam_mat4d << endl;
 
-        // Read tool in EE in reference trajectory -----------------------------
-        ifstream f_stream_toolL(fname_eeHl), f_stream_toolR(fname_eeHr);
-        static Matrix4d toolLInEE, toolRInEE;
-        for (int i=0; i<4; i++)
-            for (int j=0; j<4; j++)
+            // Handeye update ------------------
+            //if (RunRobotIndex == 0)
+            {
+                Functions::Eigen2CVMat(rob0inCam_mat4d).copyTo(cHr0_updated);
+                robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob0inCam_mat4d);
+                for (int i=0; i<handeye_window; i++)
                 {
-                    double variable;
-                    f_stream_toolL >> variable;
-                    toolLInEE(i,j) = variable;
-                    f_stream_toolR >> variable;
-                    toolRInEE(i,j) = variable;
+                    robot0InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
+                    robot0InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
                 }
+            }
+            //if (RunRobotIndex == 1)
+            {
+                Functions::Eigen2CVMat(rob1inCam_mat4d).copyTo(cHr1_updated);
+                robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob1inCam_mat4d);
+                for (int i=0; i<handeye_window; i++)
+                {
+                    robot1InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
+                    robot1InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
+                }
+            }
+
+            // Read tool in EE in reference trajectory -----------------------------
+            ifstream f_stream_toolL(fname_eeHl), f_stream_toolR(fname_eeHr);
+            static Matrix4d toolLInEE, toolRInEE;
+            for (int i=0; i<4; i++)
+                for (int j=0; j<4; j++)
+                    {
+                        double variable;
+                        f_stream_toolL >> variable;
+                        toolLInEE(i,j) = variable;
+                        f_stream_toolR >> variable;
+                        toolRInEE(i,j) = variable;
+                    }
 
         //////////////////////////////////////////////
 

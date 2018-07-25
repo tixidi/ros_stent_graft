@@ -5,7 +5,7 @@ DynaMotorThread::DynaMotorThread()
     baudnum = 1;
     GoalPos[0]=0,GoalPos[1]=10;
     index = 0;
-    deviceIndex = 0; //Needle driver USB
+    deviceIndex = 2; //Needle driver USB
 
     cout<< "\n\nRead/Write example for Linux\n\n" <<endl;
     ///////// Open USB2Dynamixel ////////////

@@ -162,6 +162,9 @@ find_library(REF_LIB ReflexxesTypeII HINTS ${CMAKE_CURRENT_SOURCE_DIR}/src/IIWA/
 
 add_executable(iiwaTest src/main.cpp ${IIWA_SRC} ${IIWA_HEADER})
 target_link_libraries(iiwaTest ${REF_LIB} -lpthread ${catkin_LIBRARIES})
+
+add_dependencies(iiwaTest ${catkin_EXPORTED_TARGETS})
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/iiwa_test.cpp

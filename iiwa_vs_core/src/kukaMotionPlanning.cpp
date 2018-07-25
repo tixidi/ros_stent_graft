@@ -180,7 +180,7 @@ KukaMotionPlanning::KukaMotionPlanning()
     pub_iiwa0_desiredEEInRob_sent = nh.advertise<std_msgs::Bool>("iiwa0_desiredEEInRob_sent", 100, true);
     pub_iiwa1_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa1_desiredEEInRob", 100, true);
     pub_iiwa1_desiredEEInRob_sent = nh.advertise<std_msgs::Bool>("iiwa1_desiredEEInRob_sent", 100, true);
-    pub_iiwas_vs_reached = nh.advertise<std_msgs::Bool>("iiwas_vs_reachead", 100, true);
+    pub_iiwas_vs_reached = nh.advertise<std_msgs::Bool>("iiwas_vs_reached", 100, true);
     //pub_exotica_complete = nh.advertise<std_msgs::Bool>("exotica_complete", 100);
     //pub_iiwa1_desiredEEInRob = nh.advertise<std_msgs::Float64MultiArray>("iiwa1_desiredEEInRob", 100);
 	
@@ -196,6 +196,8 @@ KukaMotionPlanning::KukaMotionPlanning()
     //sub_iiwa1_currJoints = nh.subscribe("iiwa1_currJoints", 1000, &KukaMotionPlanning::posCallback_iiwa1_currJoints,this);
     sub_exotica_complete = nh.subscribe("exotica_complete", 1, &KukaMotionPlanning::posCallback_exotica_complete,this);
     sub_fname_toolmandrel = nh.subscribe("fname_traj_toolmandrel", 1, &KukaMotionPlanning::plannerCallback,this);
+
+
     cout << " ros::Subscriber!" << endl;
 
     srand(time(0));
@@ -555,69 +557,81 @@ void KukaMotionPlanning:: pathPlanning()
             myTracker->DrawTrajectoryToolR = true;
 
             #ifndef SimulationON
-                time_t t = time(0);   // get time now
-                struct tm * now = localtime( & t );
-                char buffer [80];
-                strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
 
-                std::string toolsInCamFname, fEEInRobotsFname, fHandEye0Name, fHandEye1Name,
-                            fToolTimerName, fEEInRobotsTimerFname, fRefTrajFname;
-                std::string fileDir=SRC_FILES_DIR+"demonstration/";
-                toolsInCamFname = fileDir + "toolmandrel_step"+std::to_string(TRAJSTEP)+".repeat_" + string(buffer);
-                fEEInRobotsFname = fileDir + "EEInRobots.repeat_" + string(buffer);
-                fToolTimerName = fileDir + "toolsTimer.txt_" + string(buffer);
-                fEEInRobotsTimerFname = fileDir + "EEInRobotsTimer.repeat_" + string(buffer);
+                if (initialise){
+                    time_t t = time(0);   // get time now
+                    struct tm * now = localtime( & t );
+                    char buffer [80];
+                    strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
 
-                toolsInCam.open(toolsInCamFname.c_str());
-                fEEInRobots.open(fEEInRobotsFname.c_str());
-                fEEInRobots_timer.open(fEEInRobotsTimerFname.c_str());
+                    std::string toolsInCamFname, fEEInRobotsFname, fHandEye0Name, fHandEye1Name,
+                                fToolTimerName, fEEInRobotsTimerFname, fRefTrajFname;
+                    std::string fileDir=SRC_FILES_DIR+"demonstration/";
+                    toolsInCamFname = fileDir + "toolmandrel_step"+std::to_string(TRAJSTEP)+".repeat_" + string(buffer);
+                    fEEInRobotsFname = fileDir + "EEInRobots.repeat_" + string(buffer);
+                    fToolTimerName = fileDir + "toolsTimer.txt_" + string(buffer);
+                    fEEInRobotsTimerFname = fileDir + "EEInRobotsTimer.repeat_" + string(buffer);
 
-                myTracker->initializeRecodeVideo(fileDir, buffer);
-                myTracker->toolsInCamTimer.open(fToolTimerName.c_str());
+                    toolsInCam.open(toolsInCamFname.c_str());
+                    fEEInRobots.open(fEEInRobotsFname.c_str());
+                    fEEInRobots_timer.open(fEEInRobotsTimerFname.c_str());
 
-                if (RunRobotIndex == 0 || RunRobotIndex == 2)
-                {
-                    fHandEye0Name = fileDir + "HandEye0_" + string(buffer);
-                    fHandEye0.open(fHandEye0Name.c_str());
+                    myTracker->initializeRecodeVideo(fileDir, buffer);
+                    myTracker->toolsInCamTimer.open(fToolTimerName.c_str());
+
+                    if (RunRobotIndex == 0 || RunRobotIndex == 2)
+                    {
+                        fHandEye0Name = fileDir + "HandEye0_" + string(buffer);
+                        fHandEye0.open(fHandEye0Name.c_str());
+                    }
+                    if (RunRobotIndex == 1 || RunRobotIndex == 2)
+                    {
+                        fHandEye1Name = fileDir + "HandEye1_" + string(buffer);
+                        fHandEye1.open(fHandEye1Name.c_str());
+                    }
                 }
-                if (RunRobotIndex == 1 || RunRobotIndex == 2)
-                {
-                    fHandEye1Name = fileDir + "HandEye1_" + string(buffer);
-                    fHandEye1.open(fHandEye1Name.c_str());
-                }
+
+
 
             #endif
 
-                //if(iiwas[0]->iiwaConnected == true || iiwas[1]->iiwaConnected == true)
-                ros::spinOnce();
+                if (initialise){
+                    //if(iiwas[0]->iiwaConnected == true || iiwas[1]->iiwaConnected == true)
+                    ros::spinOnce();
 
-                cout << "RUNROBOT_mode " << RUNROBOT_mode << endl;
-                if (RUNROBOT_mode == 1)
-                {
-
-                }
-                if(iiwa0_connected || iiwa1_connected || RUNROBOT_mode == 1)
-                {
-                    if (RunRobotIndex == 0 || RunRobotIndex == 2)
+                    cout << "RUNROBOT_mode " << RUNROBOT_mode << endl;
+                    if (RUNROBOT_mode == 1)
                     {
-                        status = 21;
-                        cout << "Robots 0 start moving to initial pose!" << endl;
+
                     }
-                    else if (RunRobotIndex == 1 )
+                    if(iiwa0_connected || iiwa1_connected || RUNROBOT_mode == 1)
                     {
-                        status = 22;
-                        cout << "Robots 1 start moving to initial pose!" << endl;
+                        if (RunRobotIndex == 0 || RunRobotIndex == 2)
+                        {
+                            status = 21;
+                            cout << "Robots 0 start moving to initial pose!" << endl;
+                        }
+                        else if (RunRobotIndex == 1 )
+                        {
+                            status = 22;
+                            cout << "Robots 1 start moving to initial pose!" << endl;
+                        }
+                        else
+                        {
+                            status = 100;
+                        }
                     }
                     else
                     {
+                        cout << "iiwa0 connect: " << iiwa0_connected << " iiwa1 connect: " << iiwa1_connected << endl;
                         status = 100;
                     }
                 }
-                else
-                {
-                    cout << "iiwa0 connect: " << iiwa0_connected << " iiwa1 connect: " << iiwa1_connected << endl;
-                    status = 100;
-                }
+                else{
+                        status = 23;
+                    }
+
+
             }
         else
         {
@@ -731,56 +745,67 @@ void KukaMotionPlanning:: pathPlanning()
 
     else if(status == 23)
     {
-        // compute robots' initial pose via vision
-        ////////// Read all configs ///////////////
-        // Read handeye ------------
-        ifstream f_stream_r2c0(fname_cHr0), f_stream_r2c1(fname_cHr1);
         static Matrix4d rob0inCam_mat4d, rob1inCam_mat4d;
-        for (int i=0; i<4; i++)
-        {
-            for (int j=0; j<4; j++)
-                {
-                    f_stream_r2c0 >> rob0inCam_mat4d(i,j);
-                    f_stream_r2c1 >> rob1inCam_mat4d(i,j);
-                }
+        if (RunRobotIndex == 0 || RunRobotIndex == 2){
+            rob0inCam_mat4d = Functions::CVMat2Eigen(cHr0_updated);
         }
-        cout << "rob0inCam_mat4d " << endl << rob0inCam_mat4d << endl;
-        cout << "rob1inCam_mat4d " << endl << rob1inCam_mat4d << endl;
-
-        // Handeye update ------------------
-        //if (RunRobotIndex == 0)
-        {
-            Functions::Eigen2CVMat(rob0inCam_mat4d).copyTo(cHr0_updated);
-            robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob0inCam_mat4d);
-            for (int i=0; i<handeye_window; i++)
-            {
-                robot0InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
-                robot0InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
-            }
-        }
-        //if (RunRobotIndex == 1)
-        {
-            Functions::Eigen2CVMat(rob1inCam_mat4d).copyTo(cHr1_updated);
-            robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob1inCam_mat4d);
-            for (int i=0; i<handeye_window; i++)
-            {
-                robot1InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
-                robot1InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
-            }
+        if (RunRobotIndex == 1 || RunRobotIndex == 2){
+            rob1inCam_mat4d = Functions::CVMat2Eigen(cHr1_updated);
         }
 
-        // Read tool in EE in reference trajectory -----------------------------
-        ifstream f_stream_toolL(fname_eeHl), f_stream_toolR(fname_eeHr);
-        static Matrix4d toolLInEE, toolRInEE;
-        for (int i=0; i<4; i++)
-            for (int j=0; j<4; j++)
+        if (initialise){
+
+            // compute robots' initial pose via vision
+            ////////// Read all configs ///////////////
+            // Read handeye ------------
+            ifstream f_stream_r2c0(fname_cHr0), f_stream_r2c1(fname_cHr1);
+            static Matrix4d rob0inCam_mat4d, rob1inCam_mat4d;
+            for (int i=0; i<4; i++)
+            {
+                for (int j=0; j<4; j++)
+                    {
+                        f_stream_r2c0 >> rob0inCam_mat4d(i,j);
+                        f_stream_r2c1 >> rob1inCam_mat4d(i,j);
+                    }
+            }
+            cout << "rob0inCam_mat4d " << endl << rob0inCam_mat4d << endl;
+            cout << "rob1inCam_mat4d " << endl << rob1inCam_mat4d << endl;
+
+            // Handeye update ------------------
+            //if (RunRobotIndex == 0)
+            {
+                Functions::Eigen2CVMat(rob0inCam_mat4d).copyTo(cHr0_updated);
+                robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob0inCam_mat4d);
+                for (int i=0; i<handeye_window; i++)
                 {
-                    double variable;
-                    f_stream_toolL >> variable;
-                    toolLInEE(i,j) = variable;
-                    f_stream_toolR >> variable;
-                    toolRInEE(i,j) = variable;
+                    robot0InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
+                    robot0InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
                 }
+            }
+            //if (RunRobotIndex == 1)
+            {
+                Functions::Eigen2CVMat(rob1inCam_mat4d).copyTo(cHr1_updated);
+                robotPosture robotpos_tmp = Functions::convertHomoMatrix2RobotPosture(rob1inCam_mat4d);
+                for (int i=0; i<handeye_window; i++)
+                {
+                    robot1InCamera_hist[i].setPosition(robotpos_tmp.getPosition());
+                    robot1InCamera_hist[i].setQuaternion(robotpos_tmp.getQuaternion());
+                }
+            }
+        }
+
+            // Read tool in EE in reference trajectory -----------------------------
+            ifstream f_stream_toolL(fname_eeHl), f_stream_toolR(fname_eeHr);
+            static Matrix4d toolLInEE, toolRInEE;
+            for (int i=0; i<4; i++)
+                for (int j=0; j<4; j++)
+                    {
+                        double variable;
+                        f_stream_toolL >> variable;
+                        toolLInEE(i,j) = variable;
+                        f_stream_toolR >> variable;
+                        toolRInEE(i,j) = variable;
+                    }
 
         //////////////////////////////////////////////
 
@@ -1038,8 +1063,8 @@ void KukaMotionPlanning:: pathPlanning()
         ///////// Play trajectory /////////////////////////////////////////////////////////
         myTracker->Traj_index = trajIndex+1;
 
-        if(iiwa0_connected || iiwa1_connected || RUNROBOT_mode == 1)
-        {
+        if(RUNROBOT_mode == 1)
+        {// Test mode:
             if (RunRobotIndex == 0 || RunRobotIndex == 2)
             {
                 visionGuidedMoveToPosture_noVision_iiwa(traj_ToolLInMan[trajIndex_pre], traj_ToolLInMan[trajIndex], 0, rob0inCam_mat4d, toolLInEE, fname_eeHl, millisecbuffer, ms);
@@ -1083,7 +1108,8 @@ void KukaMotionPlanning:: pathPlanning()
             }
         }
 
-
+        if (initialise)
+            initialise = false;
 
         cout << "trajIndex " << trajIndex << endl;
 //        myNeedleDriver->changePos0( traj_DriverL[trajIndex]);
@@ -1100,7 +1126,9 @@ void KukaMotionPlanning:: pathPlanning()
             status = 100;
 //            msleep(1000);
 
-            pub_iiwas_vs_reached.publish(true);
+            std_msgs::Bool iiwas_vs_reached_msg;
+            iiwas_vs_reached_msg.data = true;
+            pub_iiwas_vs_reached.publish(iiwas_vs_reached_msg);
 
             cout << "finish moving!" << endl;
         }
@@ -2942,6 +2970,78 @@ void KukaMotionPlanning::recordforLiang()
 bool KukaMotionPlanning::moveIiwa(int robotRef, Erl::Transformd iiwa_transformd){
 
     ros::Rate rate(rate_hz);
+
+    if (!iiwa0_transformd_received){
+        tmp_iiwa0_transformd = iiwa_transformd;
+        iiwa0_transformd_received = true;
+        return true;
+    }
+
+    if (iiwa0_transformd_received){
+        iiwa0_transformd_received = false;
+        Erl::Transformd tmp_iiwa1_transformd = iiwa_transformd;
+
+        int64_t nowms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        iiwa0_transformd_file<<nowms<<" ";
+        iiwa1_transformd_file<<nowms<<" ";
+
+        //record kuka current transformd
+        for (int i = 0; i <3; i++){
+            for(int j = 0; j <4; j ++){
+                iiwa0_transformd_file<<iiwa0_currentTransformd(i,j)<<" ";
+                iiwa1_transformd_file<<iiwa1_currentTransformd(i,j)<<" ";
+
+            }
+        }
+
+        //record kuka next transformd
+        for (int i = 0; i <3; i++){
+            for(int j = 0; j <4; j ++){
+                iiwa0_transformd_file<<tmp_iiwa0_transformd(i,j)<<" ";
+                iiwa1_transformd_file<<tmp_iiwa1_transformd(i,j)<<" ";
+            }
+        }
+
+        iiwa0_transformd_file<<endl;
+        iiwa1_transformd_file<<endl;
+
+        if (exotica_complete){
+            std_msgs::Float64MultiArray msg_iiwa0_transformd, msg_iiwa1_transformd;
+            for (int i = 0; i <3;i++){
+                for (int j = 0; j<4; j++){
+                    if (j == 3){
+                        msg_iiwa0_transformd.data.push_back(tmp_iiwa0_transformd(i,j)/1000.0);
+                        msg_iiwa1_transformd.data.push_back(tmp_iiwa1_transformd(i,j)/1000.0);
+                    }else{
+                        msg_iiwa0_transformd.data.push_back(tmp_iiwa0_transformd(i,j));
+                        msg_iiwa1_transformd.data.push_back(tmp_iiwa1_transformd(i,j));
+                    }
+                }
+            }
+            pub_iiwa0_desiredEEInRob.publish(msg_iiwa0_transformd);
+            pub_iiwa0_desiredEEInRob_sent.publish(true);
+            pub_iiwa1_desiredEEInRob.publish(msg_iiwa1_transformd);
+            pub_iiwa1_desiredEEInRob_sent.publish(true);
+
+            rate.sleep();
+            exotica_complete = false;
+            iiwa0_reached = false;
+            iiwa1_reached = false;
+
+            cout << "after publish iiwa_transformd" << endl;
+
+            cout<<"moving iiwa"<<endl;
+            while(!exotica_complete || (!iiwa0_reached && !iiwa1_reached)){
+                ros::spinOnce();
+            }
+            cout<<"return true "<<"exotica_complete "<<exotica_complete<<" iiwa0_reached "<<iiwa0_reached<<" iiwa1_reached "<<iiwa1_reached<<endl;
+            return true;
+        }
+        return false;
+    }
+
+
+
     if (robotRef == 0)
         cout<<"exotica_complete "<<exotica_complete<<" iiwa0_reached "<<iiwa0_reached<<endl;
 

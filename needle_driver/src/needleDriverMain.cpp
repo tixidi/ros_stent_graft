@@ -71,12 +71,12 @@ int main(int argc, char **argv) {
    * away the oldest ones.
    */
     ros::Subscriber sub = nh.subscribe("read_mandrel_force", 1000, posCallback);
-	ros::Subscriber sub_needle_driver = nh.subscribe("needle_driver_command", 1000, posCallback_needle_driver);
-	/*int count  = 0;
+    ros::Subscriber sub_needle_driver = nh.subscribe("needle_driver_command", 1000, posCallback_needle_driver);
+    int count  = 0;
 
-    while(true){
+    /*while(true){
 		needleDriver->changePos0(pos);
-		usleep(6000000);
+        usleep(5000000);
 		if (count%2==0)
 			pos+=2000;
 		else
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 		count++;
 		cout<<"pos = "<<pos<<endl;
 		
-	}*/
+    }*/
 
 
   /**

@@ -79,18 +79,24 @@ void posCallback_iiwa1_reached(const std_msgs::Bool::ConstPtr& msg){
 void posCallback_iiwa0_desiredEEInRob(const std_msgs::Float64MultiArray::ConstPtr& msg){
 	for(int i = 0; i < 12; i++){
 		iiwa0_desiredEEInRob[i] = msg->data[i];
+        cout<<iiwa0_desiredEEInRob[i];
 	}
+    cout<<endl;
 }
 void posCallback_iiwa1_desiredEEInRob(const std_msgs::Float64MultiArray::ConstPtr& msg){
 	for(int i = 0; i < 12; i++){
 		iiwa1_desiredEEInRob[i] = msg->data[i];
+        cout<<iiwa1_desiredEEInRob[i];
 	}
+    cout<<endl;
 }
 void posCallback_iiwa0_desiredEEInRob_sent(const std_msgs::Bool::ConstPtr& msg){
-	iiwa0_desiredEEInRob_sent= msg->data;
+    iiwa0_desiredEEInRob_sent= (bool) msg->data;
+    cout<<"msg->data"<<(bool) msg->data<<endl;
 }
 void posCallback_iiwa1_desiredEEInRob_sent(const std_msgs::Bool::ConstPtr& msg){
-	iiwa1_desiredEEInRob_sent= msg->data;
+    iiwa1_desiredEEInRob_sent= (bool) msg->data;
+    cout<<"msg->data"<<(bool) msg->data<<endl;
 }
 /*
 void posCallback_iiwa0_msrTransform(const std_msgs::Float64MultiArray::ConstPtr& msg){
@@ -298,7 +304,6 @@ int main(int argc,char **argv)
 		//cout<<exotica_complete<<" "<<iiwa1_connected<<" "<<iiwa1_msrTransform_received<<" "<<iiwa1_reached<<" "<<iiwa1_desiredEEInRob_sent<<endl;
 		//pub_exotica_complete.publish(exotica_complete);
 		ros::spinOnce();
-
 		//if (mode == 1){
 		//	pub_iiwa0_reached.publish(iiwa0_reached);
 		//	pub_iiwa1_reached.publish(iiwa1_reached);
@@ -312,7 +317,7 @@ int main(int argc,char **argv)
 				target1 = write_traj(1, iiwa1_msrTransform, iiwa1_desiredEEInRob);
 				//replace_aico_trajectory(iiwa0_currJoints,iiwa1_currJoints);
 				//traj_solution = run();
-
+                cout<<"enter if statement"<<endl;
 				complete_write_traj = true;
 				exotica_complete = false;
 				pub_exotica_complete.publish(exotica_complete);
@@ -372,9 +377,7 @@ int main(int argc,char **argv)
 			
 		}
 		if (mode == 1){
-
-
-			if (iiwa0_reached && iiwa1_reached && iiwa0_desiredEEInRob_sent && iiwa1_desiredEEInRob_sent){
+            if (runRobotIdx == 2 && iiwa0_reached && iiwa1_reached && iiwa0_desiredEEInRob_sent && iiwa1_desiredEEInRob_sent){
 				//cout<<"<-----------------------11"<<endl;
                 target0 = write_traj(0, iiwa0_default_msrTransform, iiwa0_desiredEEInRob);
                 std::copy(std::begin(iiwa0_desiredEEInRob), std::end(iiwa0_desiredEEInRob), std::begin(iiwa0_default_msrTransform));
@@ -385,7 +388,7 @@ int main(int argc,char **argv)
 				pub_exotica_complete.publish(exotica_complete);
 				rate.sleep();
 			}
-			if (iiwa0_reached && !iiwa1_reached && iiwa0_desiredEEInRob_sent && !iiwa1_desiredEEInRob_sent){
+            if (runRobotIdx == 0 && iiwa0_reached && !iiwa1_reached && iiwa0_desiredEEInRob_sent && !iiwa1_desiredEEInRob_sent){
 
 
                 target0 = write_traj(0, iiwa0_default_msrTransform, iiwa0_desiredEEInRob);
@@ -396,7 +399,7 @@ int main(int argc,char **argv)
 				pub_exotica_complete.publish(exotica_complete);
 				rate.sleep();
 			}
-			if (!iiwa0_reached && iiwa1_reached && !iiwa0_desiredEEInRob_sent && iiwa1_desiredEEInRob_sent){
+            if (runRobotIdx == 1 && !iiwa0_reached && iiwa1_reached && !iiwa0_desiredEEInRob_sent && iiwa1_desiredEEInRob_sent){
 				//cout<<"<-----------------------01"<<endl;
                 target0 = write_traj(0, iiwa0_default_msrTransform, iiwa0_default_desiredEEInRob);
                 target1 = write_traj(1, iiwa1_default_msrTransform, iiwa1_desiredEEInRob);
@@ -406,22 +409,7 @@ int main(int argc,char **argv)
 				pub_exotica_complete.publish(exotica_complete);
 				rate.sleep();
 			}
-            if (iiwa0_reached || iiwa1_reached){
-                //replace_aico_trajectory(iiwa0_default_currJoints,iiwa1_default_currJoints);
-//                for (int i = 0; i < 7; i ++){
-//                    iiwa0_currJoints[i] = iiwa0_default_currJoints[i];
-//                    iiwa1_currJoints[i] = iiwa1_default_currJoints[i];
-//                }
-//                for (int i = 0; i < 7; i ++){
-//                    qstart<<iiwa0_default_currJoints[i]<<" ";
-//                }
-//                for (int i = 0; i < 7; i ++){
-//                    qstart<<iiwa1_default_currJoints[i]<<" ";
-//                }
-//                qstart<<endl;
-//                std::copy(std::begin(iiwa0_default_currJoints), std::end(iiwa0_default_currJoints), std::begin(iiwa0_currJoints));
-//                std::copy(std::begin(iiwa1_default_currJoints), std::end(iiwa1_default_currJoints), std::begin(iiwa1_currJoints));
-            }
+
 
 
 		}

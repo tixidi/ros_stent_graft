@@ -581,7 +581,7 @@ int main(int argc,char **argv)
 
 
             // Write to trajectory file
-            if (bool_write && (!bool_initKFL || !bool_initKFR || !bool_initKFM) )
+            if ((bool_write || bool_write_raw) && (!bool_initKFL || !bool_initKFR || !bool_initKFM) )
             {
               myfile << Mandrel.Tvec.ptr<float>(0)[0] << " " << Mandrel.Tvec.ptr<float>(0)[1] << " " << Mandrel.Tvec.ptr<float>(0)[2] << " "
                      << Mandrel.Rvec.ptr<float>(0)[0] << " " << Mandrel.Rvec.ptr<float>(0)[1] << " " << Mandrel.Rvec.ptr<float>(0)[2] << " "
@@ -591,18 +591,29 @@ int main(int argc,char **argv)
                      << ToolR.Rvec.ptr<float>(0)[0] << " " << ToolR.Rvec.ptr<float>(0)[1] << " " << ToolR.Rvec.ptr<float>(0)[2] << " ";
             }
 
-            if (bool_write)
-            {
-                for (int i=0; i<fabric_N; i++)
-                {
-                    myfile << fabricMarkers[i].Tvec.ptr<float>(0)[0] << " "
-                           << fabricMarkers[i].Tvec.ptr<float>(0)[1] << " "
-                           << fabricMarkers[i].Tvec.ptr<float>(0)[2] << " "
-                           << fabricMarkers[i].Rvec.ptr<float>(0)[0] << " "
-                           << fabricMarkers[i].Rvec.ptr<float>(0)[1] << " "
-                           << fabricMarkers[i].Rvec.ptr<float>(0)[2] << " ";
+            if (bool_write || bool_write_raw){
+                ros::spinOnce();
+
+                if (key1 == int('d')){
+                    myfile << " 1 "; //1 means run single stitch
+                    key1 = 0;
+                }else{
+                    myfile << " 0 "; //0 means no action
                 }
             }
+
+//            if (bool_write)
+//            {
+//                for (int i=0; i<fabric_N; i++)
+//                {
+//                    myfile << fabricMarkers[i].Tvec.ptr<float>(0)[0] << " "
+//                           << fabricMarkers[i].Tvec.ptr<float>(0)[1] << " "
+//                           << fabricMarkers[i].Tvec.ptr<float>(0)[2] << " "
+//                           << fabricMarkers[i].Rvec.ptr<float>(0)[0] << " "
+//                           << fabricMarkers[i].Rvec.ptr<float>(0)[1] << " "
+//                           << fabricMarkers[i].Rvec.ptr<float>(0)[2] << " ";
+//                }
+//            }
             myfile << endl;
 
 //ROS: ---------------------------------------------------------------------
@@ -682,7 +693,7 @@ int main(int argc,char **argv)
                 time_t t = time(0);   // get time now
                 struct tm * now = localtime( & t );
                 char buffer [80];
-                strftime (buffer,80,"%Y-%m-%d-%H-%M",now);
+                strftime (buffer,80,"%Y-%m-%d-%H-%M-%S",now);
 
                 // write a video
                 string strTemp;
@@ -691,6 +702,7 @@ int main(int argc,char **argv)
                 strTemp = "outR_" + string(buffer) + ".avi";
                 videoR.open(strTemp.c_str(),CV_FOURCC('M','J','P','G'),10, Size(frameR.size().width, frameR.size().height),true);
                 strTemp = "toolmandrel_" + string(buffer) + ".txt";
+
                 myfile.open(strTemp.c_str());
 
                 if (!videoL.isOpened() || !videoR.isOpened())
@@ -719,6 +731,7 @@ int main(int argc,char **argv)
                 bool_write = false;
                 videoL.release();
                 videoR.release();
+                myfile.close();
                 cout << "Stop recording!"<<endl;
 								key1 = 0;
             }

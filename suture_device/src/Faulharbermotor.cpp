@@ -23,7 +23,7 @@ Faulharbermotor::Faulharbermotor()
 
     //open port
     //sertialPort1 =new QSerialPort("Com3");
-    sertialPort1 =new QSerialPort("/dev/ttyUSB1");
+    sertialPort1 =new QSerialPort("/dev/ttyUSB0");
 
     sertialPort1->open(QIODevice::ReadWrite);
 
@@ -487,6 +487,7 @@ bool    Faulharbermotor::controlLoop()
         status=0;
         static int count = 1;
         cout<<"stitch finished" << ", #" << count++ <<endl;
+
         cout<<"\n\n\n"<<endl;
         needleDir=-needleDir;
 				return true;

@@ -76,8 +76,12 @@ public:
                                           robotPosture targetToolInMan, int robotIndex,
                                           Matrix4d robInCameraFrame,
                                           Matrix4d toolInEE, char *toolFile);
-
    bool visionGuidedMoveToPosture_kalmanvision_iiwa(robotPosture currentToolInMan,
+                                                      robotPosture targetToolInMan, int robotIndex,
+                                                      Matrix4d robInCameraFrame,
+                                                      Matrix4d toolInEE, char *toolFile,
+                                                      char *millisecbuffer, int ms);
+   bool visionGuidedMoveToPosture_vision_iiwa(robotPosture currentToolInMan,
                                                       robotPosture targetToolInMan, int robotIndex,
                                                       Matrix4d robInCameraFrame,
                                                       Matrix4d toolInEE, char *toolFile,
@@ -124,6 +128,7 @@ private:
    iiwaControl *iiwa_0;
    iiwaControl *iiwa_1;
    vector<iiwaControl*> iiwas;
+   bool initialise = true;
 //   forceSensor *forceReading;
 
 
@@ -203,6 +208,8 @@ private:
 
     int trajIndex;
     int trajIndex_pre;
+    bool iiwa0_transformd_received = false;
+    Erl::Transformd tmp_iiwa0_transformd;
 
    // IIWA -------------------------------
    int Num_Slot;

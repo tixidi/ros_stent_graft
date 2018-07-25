@@ -9,7 +9,6 @@ project(force_sensor)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  force_sensor
 )
 #find_package(OMD REQUIRED )
 ## System dependencies are found with CMake's conventions

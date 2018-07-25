@@ -379,8 +379,8 @@ void VisualTrackingThread::run()
             //drawTipTrajectory(toolRTraj_tvec, toolRTraj_rvec, 255, 0, 0);
         }
 
-/*        // Draw hand eye --------------------
-        DrawHandEye = false;
+        // Draw hand eye --------------------
+//        DrawHandEye = false;
         if (DrawHandEye)
         {
 //            showHandEye(frameLeft_rect, markerInHandEye);
@@ -389,7 +389,7 @@ void VisualTrackingThread::run()
 //            cout << "markerInHandEye_updated " << markerInHandEye_updated << endl;
         }
 
-        DrawForce = false;
+/*        DrawForce = false;
         if (DrawForce)
         {
             Point3f a(0.0532107,  0.0036869,  0.155462);
