@@ -9,6 +9,7 @@ double prev_posrodr[6] = {0,0,0,0,0,0};
 double curr_posrodr[6] = {0,0,0,0,0,0};
 MandrelDriverInterface* mandrelDriver;
 double pos = 0;
+
 void posCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
 
