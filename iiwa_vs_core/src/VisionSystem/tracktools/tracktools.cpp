@@ -659,6 +659,10 @@ bool TrackTools::estimateToolPose(aruco::Marker &tool, vector<int> toolID, int N
 //        toolInMarkerTrans.at<float>(1,3) =  - StereoMarkersL[ind].ssize/(2*tan(M_PI/N));
         toolInMarkerTrans.at<float>(1,3) =  - markersize/(2*tan(M_PI/N));
 
+        if(N==1){
+            cout<<"toolInMarkerTrans.at<float>(1,3) "<<toolInMarkerTrans.at<float>(1,3)<<endl;
+        }
+
 //        if (N==8)
 //        {//Mandrel hard code
 //            toolInMarkerTrans.at<float>(1,3) =  - 0.066/2;

@@ -104,7 +104,7 @@ const float Ttorlerance = 0.001;
 //const int MandrelID[mandrel_N] = {321, 717, 221, 62};
 //const float mRadius = 0.044;S
 const int mandrel_N = 8;
-const int MandrelID[mandrel_N] = {413, 321, 97, 819, 123, 221, 928, 62,};
+const int MandrelID[mandrel_N] = {928, 62,413, 321, 97, 819, 123, 221};
 const float mRadius = 0.066;
 const float mSize = mRadius * tan(M_PI/mandrel_N);
 

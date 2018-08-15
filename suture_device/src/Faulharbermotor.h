@@ -88,7 +88,7 @@ public:
 //    const int absOpenPos= -85;  //
 //    const int absClosePos=-883; // -
     const int absOpenPos= -85;  //
-    const int absClosePos=-736; // -
+    const int absClosePos=-775; // -
 
     Faulharbermotor();
     ~Faulharbermotor();

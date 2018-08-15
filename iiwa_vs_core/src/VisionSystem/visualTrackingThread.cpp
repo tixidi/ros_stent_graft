@@ -329,10 +329,12 @@ void VisualTrackingThread::run()
 
 
         DrawTool = true;
+//       cout << "drawTool ==" << DrawTool<< endl;
 //        DrawNeedle = false;
         // Draw tools -------------------
        if (DrawTool)
         {
+
             //msleep(150);
                 detectToolsInCamFrame_global(frameLeft_rect, frameRight_rect);
                 //detectToolsInCamFrame_global(frameL, frameR);
@@ -361,7 +363,15 @@ void VisualTrackingThread::run()
         }
 
          DrawTrajectory = false;
+
         // Draw trajectory -------------------------
+
+         if (DrawMandrel && toolLTraj_tvec.size()>0){
+             //draw seing slot
+             drawTrajectory(mandrel_tvec,255,255,0);
+         }
+
+
         if (DrawTrajectoryToolL && toolLTraj_tvec.size()>0)
         {
 
@@ -380,13 +390,22 @@ void VisualTrackingThread::run()
         }
 
         // Draw hand eye --------------------
-//        DrawHandEye = false;
+//        DrawHandEye = true;
         if (DrawHandEye)
         {
 //            showHandEye(frameLeft_rect, markerInHandEye);
-            showHandEye(frameLeft_rect, markerInHandEye_updated);
-//            cout << "markerInHandEye " << markerInHandEye << endl;
+//            showHandEye(frameLeft_rect, markerInHandEye_updated);
+
+//            Functions::ToolPose2CVMat(toolsTracker->Tools[1]).copyTo(markerInHandEye);
+            showHandEye(GlobaleImages.frameLeft, markerInHandEye_updated);
 //            cout << "markerInHandEye_updated " << markerInHandEye_updated << endl;
+        }
+
+        drawSlots = true;
+        if (drawSlots)
+        {
+            showSlots();
+//            cout << "showing " << MAN_H_SLOTS_NEW_draw.size() << " slots!" << endl;
         }
 
 /*        DrawForce = false;
@@ -625,6 +644,7 @@ void VisualTrackingThread::run()
             recordVideo();
 		
     }
+
 
 }
 
@@ -1067,7 +1087,6 @@ bool VisualTrackingThread::detectToolsInCamFrame_global(cv::Mat3b frameL, cv::Ma
     vector<bool> toolDetected;
     //toolsTracker->detectTools(frameL, frameR, toolTvec, toolRvec, toolDetected);
     toolsTracker->trackTools(frameL, frameR, toolTvec, toolRvec, toolDetected);
-
     toolsTracker->drawTools(GlobaleImages.frameLeft);
     toolsTracker->drawStereoMarkers(GlobaleImages.frameLeft, GlobaleImages.frameRight);
 
@@ -1176,8 +1195,8 @@ void VisualTrackingThread::drawTrajectory(vector<Point3f> trajectory, int r, int
     Mat P1_ = Mat(3,3, CV_64F, double(0));
     Mat P2_ = Mat(3,3, CV_64F, double(0));
 
-//    Mat D1_ = Mat(4,1, CV_64F, double(0));
-//    Mat D2_ = Mat(4,1, CV_64F, double(0));
+    Mat D1_ = Mat(4,1, CV_64F, double(0));
+    Mat D2_ = Mat(4,1, CV_64F, double(0));
 
     cv::Mat T_homogeneous(4,1,cv::DataType<double>::type); // translation vector
     cv::decomposeProjectionMatrix(P1, P1_, r_vec1, T_homogeneous);
@@ -1190,8 +1209,8 @@ void VisualTrackingThread::drawTrajectory(vector<Point3f> trajectory, int r, int
     std::vector<cv::Point2f> trajectoryLeft;
     std::vector<cv::Point2f> trajectoryRight;
 
-    cv::projectPoints(trajectory, r_vec1, t_vec1, P1_, D1, trajectoryLeft);
-    cv::projectPoints(trajectory, r_vec2, -t_vec2, P2_, D2, trajectoryRight);
+    cv::projectPoints(trajectory, r_vec1, t_vec1, P1_, D1_, trajectoryLeft);
+    cv::projectPoints(trajectory, r_vec2, -t_vec2, P2_, D2_, trajectoryRight);
 ///////////////////////////////////////////////////////
 		 
 		if (r==255){
@@ -2477,7 +2496,39 @@ void VisualTrackingThread::showNeedleInCam( cv::Mat &needlePoseInCamCV, std::vec
     //video.write(GlobaleImages.frameLeft);
 }
 
+void VisualTrackingThread::showSlots()
+{
 
+    char text[255];
+    sprintf(text, "%d", Curr_Slot);
+    int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
+    double fontScale = 0.5;
+    int thickness = 1;
+
+    // Compute slot positions
+    Matrix4d cHm = Functions::ToolPose2Eigen(toolsTracker->Tools[0]);
+    Matrix4d mHs = MAN_H_SLOTS_NEW_draw[Curr_Slot];
+    Matrix4d cHs = cHm * mHs;
+
+    std::vector<cv::Point3d> framePoints3D;
+    std::vector<cv::Point2d> framePoints2D;
+    cv::Point3d tmp;
+    tmp.x = double(cHs(0,3)); tmp.y = double(cHs(1,3)); tmp.z = double(cHs(2,3));
+    framePoints3D.push_back(tmp);
+
+    Mat t_vec = Mat(1,3, CV_64F, double(0));
+    Mat r_vec = Mat(1,3, CV_64F, double(0));
+
+    Mat P1_ = P1(cv::Rect(0,0,3,3));
+    Mat D1_ = Mat(4,1, CV_64F, double(0));
+    cv::projectPoints(framePoints3D, t_vec, r_vec, P1_, D1_, framePoints2D);
+
+//        cv::circle(GlobaleImages.frameLeft, framePoints2D[0], 5, Scalar(0,255,255), -1, 8, 0);
+    cv::drawMarker(GlobaleImages.frameLeft, framePoints2D[0],  cv::Scalar(0,255,255), MARKER_CROSS, 5, 1);
+    framePoints2D[0].y -=10;
+    cv::putText(GlobaleImages.frameLeft, text, framePoints2D[0], fontFace, fontScale, Scalar::all(255), thickness,2);
+
+}
 
 void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
 {
@@ -2486,8 +2537,8 @@ void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
     Vector4d y(0,0.02,0,1);
     Vector4d z(0,0,0.02,1);
 
-    Matrix4d  markerInHandeyeFrame = CV2EigenMat(cHm) ;/*
-    cout << "markerInHandeyeFrame: " << markerInHandeyeFrame << endl;*/
+    Matrix4d  markerInHandeyeFrame = CV2EigenMat(cHm) ;
+//    cout << "showHandEye markerInHandeyeFrame: " << markerInHandeyeFrame << endl;
 
     Vector4d originInCam = markerInHandeyeFrame*origin;
     Vector4d xCam = markerInHandeyeFrame*x;
@@ -2502,6 +2553,7 @@ void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
     originCV.x = originInCam(0);
     originCV.y = originInCam(1);
     originCV.z = originInCam(2);
+//    cout << "showHandEye originCV: " << originCV << endl;
 
     xCV.x = xCam(0);
     xCV.y = xCam(1);
@@ -2527,12 +2579,14 @@ void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
     Mat r_vec = Mat(1,3, CV_64F, double(0));
 
     Mat P1_ = P1(cv::Rect(0,0,3,3));
-    cv::projectPoints(framePoints3D, t_vec, r_vec, P1_, D1, framePoints2D);
+    Mat D1_ = Mat(4,1, CV_64F, double(0));
+    cv::projectPoints(framePoints3D, t_vec, r_vec, P1_, D1_, framePoints2D);
 
     line(GlobaleImages.frameLeft, framePoints2D[0], framePoints2D[1], Scalar(0,0,255), 2, 8, 0);
     line(GlobaleImages.frameLeft, framePoints2D[0], framePoints2D[2], Scalar(0,255,0), 2, 8, 0);
     line(GlobaleImages.frameLeft, framePoints2D[0], framePoints2D[3], Scalar(255,0,0), 2, 8, 0);
-}
+
+   }
 
 
 void VisualTrackingThread::showNeedleDriverFrameInCam( cv::Mat &needleDriverPoseInCamCV, bool newHandEye )

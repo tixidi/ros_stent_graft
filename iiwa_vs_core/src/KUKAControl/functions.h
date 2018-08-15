@@ -12,6 +12,8 @@
 #include <aruco/aruco.h>
 #include <aruco/marker.h>
 #include <aruco/markerdetector.h>
+#include <fstream>      // std::ifstream
+#include <string>
 
 class Functions
 {
@@ -581,6 +583,17 @@ public:
 
         cout << "norm(I, shouldBeIdentity) " << norm(I, shouldBeIdentity) << endl;
         return  norm(I, shouldBeIdentity) < 1e-3;
+
+    }
+
+    static void ToolPose2File(std::ofstream& fstream, aruco::Marker m){
+
+        fstream << m.Tvec.ptr<float>(0)[0] << " "
+           << m.Tvec.ptr<float>(0)[1] << " "
+           << m.Tvec.ptr<float>(0)[2] << " "
+           << m.Rvec.ptr<float>(0)[0] << " "
+           << m.Rvec.ptr<float>(0)[1] << " "
+           << m.Rvec.ptr<float>(0)[2] << " "<<endl;
 
     }
 

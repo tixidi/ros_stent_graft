@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include "handEyeAbsoluteOrientation/AbsoluteOrientation.h"
 #include "KUKAControl/definitions.h"
+#include "KUKAControl/functions.h"
 #include <opencv2/video/tracking.hpp>
 
 #include <aruco/aruco.h>
@@ -139,8 +140,8 @@ public:
     void showHandEye(Mat3b frame, cv::Mat cHr);
 
     // Draw trajectory ---------------
-    bool DrawTrajectory, DrawTrajectoryToolL, DrawTrajectoryToolR;
-    vector<Point3f> toolLTraj_tvec, toolRTraj_tvec;
+    bool DrawTrajectory, DrawTrajectoryToolL, DrawTrajectoryToolR, DrawMandrel;
+    vector<Point3f> toolLTraj_tvec, toolRTraj_tvec, mandrel_tvec;
     vector<Point3f> toolLTraj_rvec, toolRTraj_rvec;
     void drawTrajectory(vector<Point3f> trajectory, int r, int g, int b);
     void drawNeedleTrajectory(vector<Point3f> toolTraj, vector<Point3f> toolTraj_Rvec, int r, int g, int b);
@@ -178,6 +179,10 @@ public:
     bool Inspect;
     char* fname_thread_ori, *fname_thread_new;
 
+    bool drawSlots;
+    vector<Matrix4d> MAN_H_SLOTS_NEW_draw;
+    void showSlots();
+    int Curr_Slot;
 
 signals:
     void imagesReady(stereoImages Images);

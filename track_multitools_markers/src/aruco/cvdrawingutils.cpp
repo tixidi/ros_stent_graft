@@ -120,10 +120,10 @@ void CvDrawingUtils::draw3dCube(cv::Mat &Image,Marker &m,const CameraParameters 
 void CvDrawingUtils::draw3dAxis(cv::Mat &Image,Board &B,const CameraParameters &CP)
 {
 Mat objectPoints (4,3,CV_32FC1);
-objectPoints.at<float>(0,0)=0;objectPoints.at<float>(0,1)=0;objectPoints.at<float>(0,2)=0;
-objectPoints.at<float>(1,0)=2*B[0].ssize;objectPoints.at<float>(1,1)=0;objectPoints.at<float>(1,2)=0;
-objectPoints.at<float>(2,0)=0;objectPoints.at<float>(2,1)=2*B[0].ssize;objectPoints.at<float>(2,2)=0;
-objectPoints.at<float>(3,0)=0;objectPoints.at<float>(3,1)=0;objectPoints.at<float>(3,2)=2*B[0].ssize;
+objectPoints.at<float>(0,0)=0;              objectPoints.at<float>(0,1)=0;              objectPoints.at<float>(0,2)=0;
+objectPoints.at<float>(1,0)=2*B[0].ssize;   objectPoints.at<float>(1,1)=0;              objectPoints.at<float>(1,2)=0;
+objectPoints.at<float>(2,0)=0;              objectPoints.at<float>(2,1)=2*B[0].ssize;   objectPoints.at<float>(2,2)=0;
+objectPoints.at<float>(3,0)=0;              objectPoints.at<float>(3,1)=0;              objectPoints.at<float>(3,2)=2*B[0].ssize;
 
 vector<Point2f> imagePoints;
 projectPoints( objectPoints, B.Rvec,B.Tvec, CP.CameraMatrix, CP.Distorsion,   imagePoints);

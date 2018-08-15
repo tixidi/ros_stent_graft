@@ -156,6 +156,7 @@ void posCallback_iiwa_msrTransform(const std_msgs::Float64MultiArray::ConstPtr& 
 	for (int i = 0; i <12; i ++){
 		if (iiwa_msrTransform[0]!=NULL && abs(msg->data[i]-iiwa_msrTransform[i])>0.01){
 			std_msgs::Float64MultiArray tmp;
+Eigen::Matrix<double, 7, 1> destJoints;
 			for (int j = 0; j <12; j ++){
 				tmp.data.push_back(iiwa_msrTransform[j]);
 				
@@ -179,7 +180,16 @@ void posCallback_iiwa_msrTransform(const std_msgs::Float64MultiArray::ConstPtr& 
 
 int main(int argc,char **argv)
 {
+    //initialise ros
+    kukaNo = argv[1];
+    string nodeName = "kuka"+kukaNo;
+    ros::init(argc, argv, nodeName);
+    ros::NodeHandle nh;
 ////////////////
+//        cerr<<argc<<endl;
+//    for (int i = 0; i <argc; i++){
+//        cerr<<argv[i]<<endl;
+//    }
 	if (argc<3 || argc>3) {
 		cerr<<"Invalid number of arguments"<<endl;
 		cerr<<"Usage: [kuka number] [mode 0:kuka 1:test]"<<endl;
@@ -193,12 +203,8 @@ int main(int argc,char **argv)
 			cerr<<"Invalid mode"<<endl;
 			return 1;
 	}
-	//initialise ros 
-	kukaNo = argv[1];
-	string nodeName = "kuka"+kukaNo;
-	ros::init(argc, argv, nodeName);
-    ros::NodeHandle nh;
-	//ros::Publisher pub=nh.advertise<iiwa_test::ToolsPose>("kuka_pose", 100);
+
+
 	
 	//publisher 
 	//ros::Publisher pub1=nh.advertise<iiwa_test::ToolsPose>("kuka"+kukaNo+"_pose", 100, true);
@@ -398,7 +404,8 @@ int main(int argc,char **argv)
 							maxDst = abs(destJoints[i]-currJoints[i]);
 						}
 					}
-					double maxTime = maxDst/angSpd;	
+                    //double maxTime = maxDst/angSpd;
+                    double maxTime = maxDst/0.001;
 
 ///////////////////////////
 					
@@ -437,18 +444,18 @@ int main(int argc,char **argv)
 					if (mode == 0){
 						kuka.setJoints(destJoints);
 						currJoints = kuka.getJoints();
-						while(!complete){
-							currJoints = kuka.getJoints();
-							for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
-								if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
-								//if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
-									complete = false;
-									break;
-								}else{
-									complete = true;
-								}
-							}
-						}
+                        while(!complete){
+                            currJoints = kuka.getJoints();
+                            for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){
+                                if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.001){
+                                //if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+                                    complete = false;
+                                    break;
+                                }else{
+                                    complete = true;
+                                }
+                            }
+                        }
 						/*for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
 							//if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
 							if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){

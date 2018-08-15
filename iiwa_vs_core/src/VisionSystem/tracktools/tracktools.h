@@ -22,6 +22,8 @@
 #include <sys/ioctl.h>
 #include <linux/v4l2-mediabus.h>
 
+#include "KUKAControl/functions.h"
+
 namespace myaruco{
 
     class TrackTools

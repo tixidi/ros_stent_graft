@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include "mandrelDriverInterface.h"
 #include <std_msgs/Float64MultiArray.h> 
+#include <std_msgs/Bool.h>.h>
 #include <iostream>
 #include <QApplication>
 using namespace std;
@@ -8,7 +9,9 @@ using namespace std;
 double prev_posrodr[6] = {0,0,0,0,0,0};
 double curr_posrodr[6] = {0,0,0,0,0,0};
 MandrelDriverInterface* mandrelDriver;
-double pos = 0;
+ros::Publisher pub_mandrel_complete;
+int pos = 0;
+
 void posCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
 
@@ -33,7 +36,14 @@ void posCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
 
 }
 
-
+void posCallback_mandrel_command(const std_msgs::Bool::ConstPtr& msg)
+{
+    pos+=4095/12;
+    mandrelDriver->changePos(pos);
+    std_msgs::Bool msg_complete;
+    msg_complete.data = true;
+    pub_mandrel_complete.publish(msg_complete);
+}
 
 
 int main(int argc, char **argv) {
@@ -43,20 +53,25 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
     mandrelDriver = new MandrelDriverInterface();
 
-    ros::Subscriber sub = nh.subscribe("mandrel_posrodr", 1000, posCallback);
+    //ros::Subscriber sub = nh.subscribe("mandrel_posrodr", 1000, posCallback);
+    pub_mandrel_complete = nh.advertise<std_msgs::Bool>("mandrel_complete", 100,true);
+    ros::Subscriber sub_mandrel_command = nh.subscribe("mandrel_command", 1000, posCallback_mandrel_command);
+    int count  = 0;
 	
-    /*int count  = 0;
-	
-    while(true){
-		mandrelDriver->changePos(pos);
-		usleep(1000000);
-			
+//    while(true){
+//        mandrelDriver->changePos(0);
+//		usleep(1000000);
+
 		
-		cout<<"pos = "<<pos<<endl;
-        pos+=512;
+//		cout<<"pos = "<<pos<<endl;
+//        pos+=512;
+
+//        if (pos>4096)
+//            pos-=4095;
 		
-    }*/
-	
+//    }
+
+
 
   ros::spin();
 

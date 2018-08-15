@@ -3,6 +3,7 @@
 
 #include <iostream>     // std::cout
 #include <fstream>      // std::ifstream
+#include <string>      // std::ifstream
 
 #include <QThread>
 #include <QTimer>
@@ -68,9 +69,11 @@ public:
    void readMandrelToolsDrivers( char * fileDir, vector<robotPosture> &mandrel,
                                  vector<robotPosture> &toolL, vector<robotPosture> &toolR,
                                  vector<float> &driverL, vector<float> &driverR);
+   void readSlots(char *fileDir, vector<Matrix4d> &Slots);
    void readMandrelToolsDriversInCamera(char * fileDir, vector<cv::Point3f> &mandrel,
                                          vector<cv::Point3f> &toolL_tvec, vector<cv::Point3f> &toolR_tvec,
-                                         vector<Point3f> &toolL_rvec, vector<Point3f> &toolR_rvec);
+                                         vector<Point3f> &toolL_rvec, vector<Point3f> &toolR_rvec,
+                                        vector<robotPosture> traj_ToolLInMan, vector<robotPosture> traj_ToolRInMan);
 
    bool visionGuidedMoveToPosture_newvision(robotPosture currentToolInMan,
                                           robotPosture targetToolInMan, int robotIndex,
@@ -99,11 +102,21 @@ public:
                                           Matrix4d robInCameraFrame,
                                           Matrix4d toolInEE, char *toolFile);
 
+//   bool readToolsTrajinMandrelandDrivers(int robotIndex,
+//                                           vector<robotPosture> &EEInRobot,
+//                                           vector<robotPosture> &traj_ToolInMan,
+//                                           vector<float> &traj_Driver,
+//                                           char* r2cFile, char* toolFile, char* trajectFile,
+//                                             char *slot2manFile_ori, char *slot2manFile_new,
+//                                             int slot_ori, int slot_new);
+
    bool readToolsTrajinMandrelandDrivers(int robotIndex,
                                            vector<robotPosture> &EEInRobot,
                                            vector<robotPosture> &traj_ToolInMan,
                                            vector<float> &traj_Driver,
-                                           char* r2cFile, char* toolFile, char* trajectFile);
+                                           char* r2cFile, char* toolFile, char* trajectFile,
+                                           int slot_ori = -1, int slot_new = -1);
+
    void transferToolsTrajByNeedlePose(vector<robotPosture> &EEInRobot,
                                       vector<robotPosture> &traj_ToolInMan,
                                       vector<robotPosture> &traj_ToolInCamera,
@@ -117,6 +130,13 @@ public:
 
    int RUNROBOT_mode;
    int RUNROBOT_index_sub;
+   int Curr_Slot, Ori_Slot;
+   int argc;
+   char **argv;
+
+
+
+   vector<Matrix4d> MAN_H_SLOTS_ORI, MAN_H_SLOTS_NEW;
 
 
 
@@ -129,6 +149,7 @@ private:
    iiwaControl *iiwa_1;
    vector<iiwaControl*> iiwas;
    bool initialise = true;
+   bool initialise_fname = true;
 //   forceSensor *forceReading;
 
 
@@ -166,7 +187,7 @@ private:
     bool iiwa1_msrTransform_received = true;
     int iiwa0_state_count = -1;
     int iiwa1_state_count = -1;
-    ofstream received_kuka0_msrTransform, received_kuka1_msrTransform, iiwa0_transformd_file, iiwa1_transformd_file;
+    ofstream received_kuka0_msrTransform, received_kuka1_msrTransform, iiwa0_transformd_file, iiwa1_transformd_file,markerLInCamFrame_file, markerInHandEye_file, traj_ToolInMan_file;
 	Matrix4d iiwa0_currentMartix4d, iiwa1_currentMartix4d;
 	Erl::Transformd iiwa0_currentTransformd, iiwa1_currentTransformd;
 	//Eigen::Matrix<double, 7, 1> iiwa0_currJoints, iiwa1_currJoints;
@@ -190,6 +211,7 @@ private:
     ros::Subscriber sub_iiwa1_connected;
     ros::Subscriber sub_exotica_complete;
     ros::Subscriber sub_fname_toolmandrel;
+    ros::Subscriber sub_change_slot_command;
 
 
 
@@ -203,6 +225,7 @@ private:
     void plannerCallback(const std_msgs::String::ConstPtr& msg);
 	//void posCallback_iiwa0_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
 	//void posCallback_iiwa1_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
+    void posCallback_change_slot_command(const std_msgs::Bool::ConstPtr& msg);
 	
     bool moveIiwa(int robotRef, Erl::Transformd iiwa_transformd);
 
@@ -213,8 +236,8 @@ private:
 
    // IIWA -------------------------------
    int Num_Slot;
-   double Dist_Slot;
-   int Curr_Slot;
+   double Dist_Slot;   
+   void computeToolInManTraj_newslot(vector<robotPosture> &traj_ToolInMan, int slot_ori, int slot_new);
 
    //FOR demo ---------------------------------------------------------------------------
    ofstream recordTrajectory;
@@ -273,6 +296,7 @@ private:
    // Configuration -----------------
    char *fname_cHr0, *fname_cHr1, *fname_eeHl, *fname_eeHr, *fname_cTi, *fname_eTm, *fname_mHm_, *fname_eeHs;
    char *fname_ee_mat, *fname_robotHmarker_mat, *fname_cameraHmarker_mat, *fname_cameraHmarker_handeye_mat, *fname_ee_robpos, *fname_robotJoints0;
+   char *fname_slots_ori, *fname_slots_new;
 //   string fname_cHr0, fname_cHr1, fname_eeHl, fname_eeHr, fname_cTi, fname_eTm, fname_mHm_, fname_eeHs;
 //   string fname_ee_mat, fname_robotHmarker_mat, fname_cameraHmarker_mat, fname_cameraHmarker_handeye_mat, fname_ee_robpos, fname_robotJoints0;
    //ifstream fstream_cHr0, fstream_cHr1, fstream_eeHl, fstream_eeHr;
