@@ -389,6 +389,16 @@ void VisualTrackingThread::run()
             //drawTipTrajectory(toolRTraj_tvec, toolRTraj_rvec, 255, 0, 0);
         }
 
+        DrawTrajectoryNeedle = true;
+        if(DrawTrajectoryNeedle && needleTraj_tvec.size()>0 ){
+            drawTrajectory(needleTraj_tvec, 0, 0, 255);
+        }
+        
+
+        if(DrawThread){
+            drawLine3Dto2D(threadPoints);
+        }        
+
         // Draw hand eye --------------------
 //        DrawHandEye = true;
         if (DrawHandEye)
@@ -2588,6 +2598,25 @@ void VisualTrackingThread::showHandEye(Mat3b frame, cv::Mat cHm)
 
    }
 
+void VisualTrackingThread::drawLine3Dto2D(cv::Mat thread_)
+{
+    // draw thread
+    std::vector<cv::Point3d> threadPoints3D;
+    std::vector<cv::Point2d> threadPoints2D;
+    threadPoints2D.resize(2);
+    threadPoints3D.resize(2);
+    threadPoints3D[0].x = thread_.at<double>(0,0);    threadPoints3D[0].y = thread_.at<double>(0,1);    threadPoints3D[0].z = thread_.at<double>(0,2);
+    threadPoints3D[1].x = thread_.at<double>(1,0);    threadPoints3D[1].y = thread_.at<double>(1,1);    threadPoints3D[1].z = thread_.at<double>(1,2);
+
+    Mat t_vec = Mat(1,3, CV_64F, double(0));
+    Mat r_vec = Mat(1,3, CV_64F, double(0));
+
+    Mat P1_ = P1(cv::Rect(0,0,3,3));
+    Mat D1_ = Mat(4,1, CV_64F, double(0));
+    cv::projectPoints(threadPoints3D, t_vec, r_vec, P1_, D1_, threadPoints2D);
+
+    line(GlobaleImages.frameLeft, threadPoints2D[0], threadPoints2D[1], Scalar(0,0,255), 2, 8, 0);
+}
 
 void VisualTrackingThread::showNeedleDriverFrameInCam( cv::Mat &needleDriverPoseInCamCV, bool newHandEye )
 {

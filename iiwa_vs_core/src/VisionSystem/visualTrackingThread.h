@@ -113,6 +113,7 @@ public:
     vector<vector<vector<cv::Point3d> > > grid_camera;
     std::string  initializeRecodeVideo(string fileDir , char *buffer);
     void recordVideo();
+    void drawLine3Dto2D(cv::Mat thread);
 
 
     cv::Mat needleDriverPoseInCamerma;
@@ -140,9 +141,10 @@ public:
     void showHandEye(Mat3b frame, cv::Mat cHr);
 
     // Draw trajectory ---------------
-    bool DrawTrajectory, DrawTrajectoryToolL, DrawTrajectoryToolR, DrawMandrel;
-    vector<Point3f> toolLTraj_tvec, toolRTraj_tvec, mandrel_tvec;
+    bool DrawTrajectory, DrawTrajectoryToolL, DrawTrajectoryToolR, DrawMandrel, DrawTrajectoryNeedle, DrawThread;
+    vector<Point3f> toolLTraj_tvec, toolRTraj_tvec, mandrel_tvec, needleTraj_tvec;
     vector<Point3f> toolLTraj_rvec, toolRTraj_rvec;
+    cv::Mat threadPoints;
     void drawTrajectory(vector<Point3f> trajectory, int r, int g, int b);
     void drawNeedleTrajectory(vector<Point3f> toolTraj, vector<Point3f> toolTraj_Rvec, int r, int g, int b);
     void drawTipTrajectory(vector<Point3f> toolTraj, vector<Point3f> toolTraj_Rvec, int r, int g, int b);

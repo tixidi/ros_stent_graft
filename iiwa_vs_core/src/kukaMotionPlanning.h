@@ -134,6 +134,8 @@ public:
    int argc;
    char **argv;
 
+   void updateEEInRobot(int runRobot, char* r2cFile, char* toolFile, vector<robotPosture> &traj_ToolInMan, vector<robotPosture> &EEInRobot);
+
 
 
    vector<Matrix4d> MAN_H_SLOTS_ORI, MAN_H_SLOTS_NEW;
@@ -151,6 +153,7 @@ private:
    bool initialise = true;
    bool initialise_fname = true;
 //   forceSensor *forceReading;
+   int RunRobotIndex;
 
 
    Vector6d targetPosOri;
@@ -185,6 +188,8 @@ private:
 	bool iiwa1_connected = false;
     bool iiwa0_msrTransform_received = true;
     bool iiwa1_msrTransform_received = true;
+    bool transformToolRbyThread = false;
+    bool iiwa0_pause = false;
     int iiwa0_state_count = -1;
     int iiwa1_state_count = -1;
     ofstream received_kuka0_msrTransform, received_kuka1_msrTransform, iiwa0_transformd_file, iiwa1_transformd_file,markerLInCamFrame_file, markerInHandEye_file, traj_ToolInMan_file;
@@ -200,6 +205,7 @@ private:
     ros::Publisher pub_iiwa1_desiredEEInRob;
     ros::Publisher pub_iiwa1_desiredEEInRob_sent;
     ros::Publisher pub_iiwas_vs_reached;
+
     //ros::Publisher pub_iiwa1_reached;
     //ros::Publisher pub_exotica_complete;
 
@@ -212,6 +218,8 @@ private:
     ros::Subscriber sub_exotica_complete;
     ros::Subscriber sub_fname_toolmandrel;
     ros::Subscriber sub_change_slot_command;
+    ros::Subscriber sub_transformToolRbyThread;
+    ros::Subscriber sub_iiwa0_pause;
 
 
 
@@ -226,8 +234,12 @@ private:
 	//void posCallback_iiwa0_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
 	//void posCallback_iiwa1_currJoints(const sensor_msgs::JointState::ConstPtr& msg);
     void posCallback_change_slot_command(const std_msgs::Bool::ConstPtr& msg);
+    void posCallback_transformToolRbyThread(const std_msgs::Bool::ConstPtr& msg);
+    void posCallback_iiwa0_pause(const std_msgs::Bool::ConstPtr& msg);
 	
     bool moveIiwa(int robotRef, Erl::Transformd iiwa_transformd);
+//    Mat KukaMotionPlanning::threadTransform(Mat thread_old, Mat thread_new, Point3d tool_old, Point3d tool_new);
+//    void computeThreadFrame(Mat thread_, Point3d tool_, Mat &frame_);
 
     int trajIndex;
     int trajIndex_pre;
@@ -271,9 +283,10 @@ private:
    Matrix4d iniToolLHNeedle_ei, iniToolRHNeedle_ei;
 
    // For thread ---------------
+   Mat thread_ori, thread_new;
    Mat threadTransform(Mat thread_old, Mat thread_new, Point3d tool_old, Point3d tool_new);
    void computeThreadFrame(Mat thread_, Point3d tool_, Mat &frame_);
-   void adaptToolRbyThread(vector<robotPosture> &traj_ToolRInCam);
+   void adaptToolRbyThread(char* trajectFile, vector<robotPosture> &traj_ToolRInMan);
 
    // For updating hand-eye -------------------------------
    int handeye_window, handeye_count0, handeye_count1;
@@ -294,13 +307,13 @@ private:
    void record3DPose(vector<cv::Point3f> &Tvec, char *fname);
 
    // Configuration -----------------
-   char *fname_cHr0, *fname_cHr1, *fname_eeHl, *fname_eeHr, *fname_cTi, *fname_eTm, *fname_mHm_, *fname_eeHs;
+   char *fname_cHr0, *fname_cHr1, *fname_eeHl, *fname_eeHr, *fname_cTi, *fname_eTm, *fname_mHm_, *fname_eeHs, *fname_sHn;
    char *fname_ee_mat, *fname_robotHmarker_mat, *fname_cameraHmarker_mat, *fname_cameraHmarker_handeye_mat, *fname_ee_robpos, *fname_robotJoints0;
    char *fname_slots_ori, *fname_slots_new;
 //   string fname_cHr0, fname_cHr1, fname_eeHl, fname_eeHr, fname_cTi, fname_eTm, fname_mHm_, fname_eeHs;
 //   string fname_ee_mat, fname_robotHmarker_mat, fname_cameraHmarker_mat, fname_cameraHmarker_handeye_mat, fname_ee_robpos, fname_robotJoints0;
    //ifstream fstream_cHr0, fstream_cHr1, fstream_eeHl, fstream_eeHr;
-   cv::Mat CAMERA_H_ROBOT0, CAMERA_H_ROBOT1, EE_H_TOOLL, EE_H_TOOLR;
+   cv::Mat CAMERA_H_ROBOT0, CAMERA_H_ROBOT1, EE_H_TOOLL, EE_H_TOOLR, TOOLL_H_NEEDLE;
 
    // Dialogs --------------------
 //   mainWindowInspection *Inspection;

@@ -24,6 +24,7 @@ Eigen::Matrix<double, 7, 1> currJoints, currTmpJoints;
 bool newDest = false;
 bool iiwa_connected = false;
 bool iiwa_reached = false;
+bool iiwa_pause = false;
 double iiwa_msrTransform[12];
 int iiwa_destJoints_count = -1;
 KukaSunrisePlanned kuka;
@@ -57,31 +58,24 @@ long int ms;
 }*/
 
 void posCallback_destJoints(const sensor_msgs::JointState::ConstPtr& msg){
-/*
-	if (newDest == true)
-		pub_iiwa_reached.publish(false);
-	if (newDest == false)
-		pub_iiwa_reached.publish(true);
 
-	for (int j = 0; j<7;j++){
-		if(destJoints[j] != msg->position[j]){
-			cout<<endl;
-			cout<<counter<<" destJoints ";
-			for (int i = 0; i < 7; i ++){
-					destJoints[i] = msg->position[i];
-					cout<<destJoints[i]<<" ";
-			}
-			cout<<endl;
-			cout<<"------------------------------------------------------------------------------"<<endl;
-			newDest = true;
-			counter++;
-			return;		
-		}	
-	}
-*/
-    if ((msg->header.seq - iiwa_destJoints_count)==1){
-        iiwa_destJoints_count = msg->header.seq;
-        ros::Rate rate(rate_hz);
+//    if ((msg->header.seq - iiwa_destJoints_count)>=1){
+//        iiwa_destJoints_count = msg->header.seq;
+//        ros::Rate rate(rate_hz);
+//        for (int i = 0; i < 7; i ++){
+//                destJoints[i] = msg->position[i];
+//                cout<<destJoints[i]<<" ";
+//        }
+//        cout<<endl;
+//        cout<<"------------------------------------------------------------------------------"<<endl;
+//        newDest = true;
+////        iiwa_reached = false;
+////        pub_iiwa_reached.publish(iiwa_reached);
+////        rate.sleep();
+//    }
+//    if ((msg->header.seq - iiwa_destJoints_count)>=1){
+//        iiwa_destJoints_count = msg->header.seq;
+//        ros::Rate rate(rate_hz);
         for (int i = 0; i < 7; i ++){
                 destJoints[i] = msg->position[i];
                 cout<<destJoints[i]<<" ";
@@ -90,37 +84,11 @@ void posCallback_destJoints(const sensor_msgs::JointState::ConstPtr& msg){
         cout<<"------------------------------------------------------------------------------"<<endl;
         newDest = true;
         iiwa_reached = false;
-        pub_iiwa_reached.publish(iiwa_reached);
-        rate.sleep();
-    }
-					
-/*		
-		for (int j = 0; j<7;j++){
-			outfile2<<destJoints[j]<<" ";				
-		}
-		outfile2<<endl;
-*/		
-		
-		/*for (int j = 0; j<7;j++){
-			if (destJoints[j]!=prevDestJoints[j]){
-				newDest = true;
-				for (int i = 0; i<7;i++){
-					outfile2<<destJoints[i]<<" ";	
-					prevDestJoints[i] = destJoints[i];
-				}
-				outfile2<<endl;
-				break;
-			}
-		}*/
-/*	if (destJoints!=prevDestJoints){
-		newDest = true;
-		for (int i = 0; i<7;i++){
-			outfile2<<destJoints[i]<<" ";	
-			prevDestJoints[i] = destJoints[i];
-		}
-		outfile2<<endl;
-	}	
-*/
+        std_msgs::Bool msg_iiwa_reached;
+        msg_iiwa_reached.data = iiwa_reached;
+        pub_iiwa_reached.publish(msg_iiwa_reached);
+//        rate.sleep();
+//    }
 		
 
 }
@@ -130,14 +98,14 @@ void posCallback_destJoints(const sensor_msgs::JointState::ConstPtr& msg){
 
 
 void posCallback_iiwa_reached(const std_msgs::Bool::ConstPtr& msg){
-	ros::Rate rate(rate_hz);
-	if (msg->data!=iiwa_reached){
-		pub_iiwa_reached.publish(iiwa_reached);
-		rate.sleep();
-		ros::spinOnce();
-	}
-	pub_iiwa_reached.publish(iiwa_reached);
-	rate.sleep();
+//	ros::Rate rate(rate_hz);
+//	if (msg->data!=iiwa_reached){
+//		pub_iiwa_reached.publish(iiwa_reached);
+//		rate.sleep();
+//		ros::spinOnce();
+//	}
+//    pub_iiwa_reached.publish(iiwa_reached);
+//    rate.sleep();
 }
 
 void posCallback_iiwa_connected(const std_msgs::Bool::ConstPtr& msg){
@@ -177,6 +145,10 @@ Eigen::Matrix<double, 7, 1> destJoints;
 	rate.sleep();
 	
 }
+void posCallback_iiwa_pause(const std_msgs::Bool::ConstPtr& msg){
+    iiwa_pause = (bool) msg->data;
+    cout<<"iiwa_pause = "<<iiwa_pause<<endl;
+}
 
 int main(int argc,char **argv)
 {
@@ -210,7 +182,7 @@ int main(int argc,char **argv)
 	//ros::Publisher pub1=nh.advertise<iiwa_test::ToolsPose>("kuka"+kukaNo+"_pose", 100, true);
 	//ros::Publisher pub2=nh.advertise<std_msgs::Bool>("kuka"+kukaNo+"_pose_done", 10, true);
     pub_iiwa_currJoints=nh.advertise<sensor_msgs::JointState>("iiwa"+kukaNo+"_currJoints", 10, true);
-	pub_iiwa_reached=nh.advertise<std_msgs::Bool>("iiwa"+kukaNo+"_reached", 100, true);
+    pub_iiwa_reached=nh.advertise<std_msgs::Bool>("iiwa"+kukaNo+"_reached", 100, true);
 	pub_iiwa_connected=nh.advertise<std_msgs::Bool>("iiwa"+kukaNo+"_connected", 10, true);
     //pub_iiwa_msrTransform=nh.advertise<std_msgs::Float64MultiArray>("iiwa"+kukaNo+"_msrTransform", 100, true);
     pub_iiwa_msrTransform=nh.advertise<iiwa_test::iiwaState>("iiwa"+kukaNo+"_msrTransform", 100, true);
@@ -223,6 +195,7 @@ int main(int argc,char **argv)
 	
     //string topicName_destJoints = "iiwa"+kukaNo+"_destJoints";
     ros::Subscriber sub_iiwa_destJoints = nh.subscribe("iiwa"+kukaNo+"_destJoints", 1000, posCallback_destJoints);
+    ros::Subscriber sub_iiwa_pause = nh.subscribe("iiwa"+kukaNo+"_pause", 1000, posCallback_iiwa_pause);
     //ros::Subscriber sub_iiwa_reached = nh.subscribe("iiwa"+kukaNo+"_reached", 1000, posCallback_iiwa_reached);
     //ros::Subscriber sub_iiwa_connected = nh.subscribe("iiwa"+kukaNo+"_connected", 1000, posCallback_iiwa_connected);
     //ros::Subscriber sub_iiwa_msrTransform = nh.subscribe("iiwa"+kukaNo+"_msrTransform", 1000, posCallback_iiwa_msrTransform);
@@ -308,9 +281,7 @@ int main(int argc,char **argv)
 		}
 		std_msgs::Float64MultiArray msg_msrTransform;
 		if (mode == 0){
-			cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
 			Erl::Transformd kuka_getMsrTransform = kuka.getMsrTransform();
-			cout<<kuka_getMsrTransform <<endl;
 			for (int i = 0; i < 3; i ++){
 				iiwa_msrTransform[4*i] = kuka_getMsrTransform.getColumn0()[i];
 				iiwa_msrTransform[4*i+1] = kuka_getMsrTransform.getColumn1()[i];
@@ -356,6 +327,7 @@ int main(int argc,char **argv)
         for (int i = 0; i <7; i ++){
             msg_iiwaState.jointState.data.push_back(currJoints[i]);
         }
+        msg_iiwaState.iiwaReached = iiwa_reached;
         pub_iiwa_msrTransform.publish(msg_iiwaState);
 
 
@@ -390,8 +362,8 @@ int main(int argc,char **argv)
             rate.sleep();
                 ros::spinOnce();
 				if (newDest){
-					iiwa_reached = false;
-					pub_iiwa_reached.publish(iiwa_reached);
+                    iiwa_reached = false;
+//					pub_iiwa_reached.publish(iiwa_reached);
 					rate.sleep();
 					
 					
@@ -411,16 +383,20 @@ int main(int argc,char **argv)
 					
 					//for (int tt = 1; tt < round(maxTime);tt++){
 					double tt = 1;
-					while (tt < maxTime){
+                    ros::spinOnce();
+                    while (tt < maxTime && !iiwa_pause){
+
+                        ros::spinOnce();
+
 						Eigen::Matrix<double, 7, 1> newJoints;
 						
 						for (int j = 0; j<7;j++){
 								newJoints[j] = currJoints[j] + (destJoints[j]-currJoints[j])*double(tt)/maxTime;	
 								outfile_received_destJoints_int<<destJoints[j]<<" ";
-								cout<<newJoints[j]<<" ";	
+//								cout<<newJoints[j]<<" ";
 						}
 						outfile_received_destJoints_int<<endl;
-						cout<<endl;	
+//						cout<<endl;
 						tt+=1;
 						
 
@@ -428,7 +404,7 @@ int main(int argc,char **argv)
 								kuka.setJoints(newJoints);
 								//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 								currTmpJoints = kuka.getJoints();
-								//std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
 								for (int j = 0; j<7;j++){
 									outfile_kuka_traj<<currTmpJoints[j]<<" ";
 								}
@@ -436,7 +412,17 @@ int main(int argc,char **argv)
 						}
 						if (mode ==1)
 								currTmpJoints = newJoints;
+
+
+
 					}	
+                    if (iiwa_pause){
+                        currJoints = kuka.getJoints();
+                        for (int i = 0; i < 7; i++){
+                            destJoints[i]=currJoints[i];
+                        }
+//                        iiwa_pause = false;
+                    }
 					
 					//check if all joints are reached
 					int noJointsReached = 0;
@@ -444,27 +430,43 @@ int main(int argc,char **argv)
 					if (mode == 0){
 						kuka.setJoints(destJoints);
 						currJoints = kuka.getJoints();
-                        while(!complete){
-                            currJoints = kuka.getJoints();
-                            for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){
-                                if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.001){
-                                //if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
-                                    complete = false;
-                                    break;
-                                }else{
-                                    complete = true;
-                                }
+//                        cout << "error joints "
+//                             << abs(destJoints[noJointsReached]-currJoints[noJointsReached])
+//                             << endl;
+//                        for (noJointsReached = 0; noJointsReached <7; noJointsReached ++)
+//                        {
+//                            if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.001)
+//                            {
+//                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//                                break;
+//                            }
+//                        }
+
+
+
+//                        while(!complete){
+//                            currJoints = kuka.getJoints();
+//                            for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){
+//                                if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.001){
+//                                    cout << "error joints "
+//                                         << abs(destJoints[noJointsReached]-currJoints[noJointsReached])
+//                                         << endl;
+//                                    complete = false;
+//                                    break;
+//                                }else{
+//                                    complete = true;
+//                                }
+//                            }
+//                        }
+                        /*for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){
+                            //if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+                            if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
+                                noJointsReached = 0;
+                                kuka.setJoints(destJoints);
+                                //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                                currJoints = kuka.getJoints();
                             }
-                        }
-						/*for (noJointsReached = 0; noJointsReached <7; noJointsReached ++){		
-							//if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
-							if (abs(destJoints[noJointsReached]-currJoints[noJointsReached])>0.0001){
-								noJointsReached = 0;
-								kuka.setJoints(destJoints);
-								//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-								currJoints = kuka.getJoints();
-							}
-						}*/
+                        }*/
 					}				
 					/////////////////////
 //							for(int i = 0; i < 12; i ++)
@@ -487,14 +489,11 @@ int main(int argc,char **argv)
 					outfile_received_destJoints_int<<endl;	
 					
 					
-					cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
+//					cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
                     Erl::Transformd kuka_getMsrTransform = kuka.getMsrTransform();
 
-
-					
-
 					//std::this_thread::sleep_for(std::chrono::milliseconds(50));
-					cout<<kuka_getMsrTransform <<endl;
+//					cout<<kuka_getMsrTransform <<endl;
 					for (int i = 0; i < 3; i ++){
 						iiwa_msrTransform[4*i] = kuka_getMsrTransform.getColumn0()[i];
 						iiwa_msrTransform[4*i+1] = kuka_getMsrTransform.getColumn1()[i];
@@ -523,6 +522,8 @@ int main(int argc,char **argv)
 	                for (int i = 0; i <7; i ++){
 	                    msg_iiwaState.jointState.data.push_back(currJoints[i]);
 	                }
+                    msg_iiwaState.iiwaReached = iiwa_reached;
+
 	                pub_iiwa_msrTransform.publish(msg_iiwaState);
 	                rate.sleep();
 					
@@ -548,6 +549,7 @@ int main(int argc,char **argv)
                     //publish iiwa_reached
                     pub_iiwa_reached.publish(iiwa_reached);
                     rate.sleep();
+                    cout<<"iiwa"+kukaNo+" reached "<<iiwa_reached<<endl;
                     //cout<<iiwa_reached<<" "<<iiwa_connected<<endl;
 
                     //ros::spinOnce();

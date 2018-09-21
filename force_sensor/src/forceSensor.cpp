@@ -7,6 +7,7 @@ using namespace std;
 
 forceSensor::forceSensor()
 {
+    cout<<"empty constructor"<<endl;
     usleep(2500000); // We wait some ms to be sure about OptoPorts enumerated PortList
     fs_running = -1;
 
@@ -15,7 +16,9 @@ forceSensor::forceSensor()
     if (ports.getLastSize()>0)
     {
         fs_running = 1;
+
         daq.open(portlist[0]);
+
         daq.zeroAll();
         cout << "Force Sensor running!" << endl;
 

@@ -26,20 +26,21 @@ int main(int argc, char **argv) {
      //Initialise force sensor
      cout << "Initialising force sensor" << endl;
      forceSensor fsensor;
+     cout<<"finished initialisation"<<endl;
+//    while(true){}
+            while(ros::ok()) {
+             std::cout<<"x: "<<fsensor.getX()<<" y: "<<fsensor.getY()<<" z: "<<fsensor.getZ()<<std::endl;
+                 //Declares the message to be sent
+                 geometry_msgs::Wrench msg;
+                 msg.force.x = fsensor.getX();
+                 msg.force.y = fsensor.getY();
+                 msg.force.z = fsensor.getZ();
+                //Publish the message
+                pub.publish(msg);
 
-       while(ros::ok()) {
-	     std::cout<<"x: "<<fsensor.getX()<<" y: "<<fsensor.getY()<<" z: "<<fsensor.getZ()<<std::endl;
-            //Declares the message to be sent
-            geometry_msgs::Wrench msg;
-            msg.force.x = fsensor.getX();
-            msg.force.y = fsensor.getY();
-            msg.force.z = fsensor.getZ();
-           //Publish the message
-           pub.publish(msg);
-
-          //Delays untill it is time to send another message
-          rate.sleep();
-         }
+               //Delays untill it is time to send another message
+               rate.sleep();
+              }
 }
 
 

@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 NeedleDriverControl::NeedleDriverControl()
 {// Needle driver USB
+//    struct PortSettings myComSettingCom1 = {BAUD9600,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
     struct PortSettings myComSettingCom1 = {BAUD9600,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
     Com1 = new QextSerialPort("/dev/ttyUSB0",myComSettingCom1);
     //Com1 = new QextSerialPort("/dev/ttyS0",myComSettingCom1);

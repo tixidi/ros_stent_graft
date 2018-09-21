@@ -22,7 +22,7 @@ public:
     opto_version getVersion();
     OptoPackage getOffset(int sensor);
     int getBytesPerRead();
-    bool open (OPort port, bool modeSetup=false, int baudRate=1000000);
+    bool open (OPort port, bool modeSetup=false, int baudRate=1000);
     void close ();
     char* getPortName();
     bool isOpen ();

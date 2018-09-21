@@ -10,43 +10,45 @@ using namespace std;
 
 int pos = 0;
 NeedleDriverInterface* needleDriver;
-void posCallback(const geometry_msgs::Wrench::ConstPtr& msg)
-{
+//void posCallback(const geometry_msgs::Wrench::ConstPtr& msg)
+//{
 
-	cout<<"force "<<msg->force.x<<endl;
-	if (msg->force.x>=0){
-		pos+=500;
-	}
+//	cout<<"force "<<msg->force.x<<endl;
+//	if (msg->force.x>=0){
+//		pos+=500;
+//	}
 
-	if (msg->force.x<0){
-		pos-=500;
-	}
-
-
-
-	if (pos>4000){
-		pos = 4000;
-	}
-	if (pos<0){
-		pos = 0;
-	}
-	std::cout<<pos<<endl;
-	needleDriver->changePos0(pos);
+//	if (msg->force.x<0){
+//		pos-=500;
+//	}
 
 
-	//usleep(1000000);
+
+//	if (pos>4000){
+//		pos = 4000;
+//	}
+//	if (pos<0){
+//		pos = 0;
+//	}
+//	std::cout<<pos<<endl;
+//	needleDriver->changePos0(pos);
 
 
-//  ROS_INFO("I heard: [%s]", msg->data.c_str());
-//std::cout<<"x: "<<msg->getX()<<" y: "<<msg.getY()<<" z: "<<msg.getZ()<<std::endl;
-//std::cout<<msg->force<<endl;
+//	//usleep(1000000);
 
-}
+
+////  ROS_INFO("I heard: [%s]", msg->data.c_str());
+////std::cout<<"x: "<<msg->getX()<<" y: "<<msg.getY()<<" z: "<<msg.getZ()<<std::endl;
+////std::cout<<msg->force<<endl;
+
+//}
 
 void posCallback_needle_driver(const std_msgs::Bool::ConstPtr& msg)
 {
-	
-
+    if ((bool)msg->data)
+        needleDriver->changePos0(4000);
+    if (!(bool)msg->data)
+        needleDriver->changePos0(0);
 }
 
 int main(int argc, char **argv) {
@@ -70,7 +72,7 @@ int main(int argc, char **argv) {
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-    ros::Subscriber sub = nh.subscribe("read_mandrel_force", 1000, posCallback);
+//    ros::Subscriber sub = nh.subscribe("read_mandrel_force", 1000, posCallback);
     ros::Subscriber sub_needle_driver = nh.subscribe("needle_driver_command", 1000, posCallback_needle_driver);
     int count  = 0;
 

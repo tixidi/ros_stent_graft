@@ -697,11 +697,11 @@ int main(int argc,char **argv)
 
                 // write a video
                 string strTemp;
-                strTemp = "outL_" + string(buffer) + ".avi";
+                strTemp = "/mnt/sdb1/demonstrations/outL_" + string(buffer) + ".avi";
                 videoL.open(strTemp.c_str(),CV_FOURCC('M','J','P','G'),10, Size(frameL.size().width, frameL.size().height),true);
-                strTemp = "outR_" + string(buffer) + ".avi";
+                strTemp = "/mnt/sdb1/demonstrations/outR_" + string(buffer) + ".avi";
                 videoR.open(strTemp.c_str(),CV_FOURCC('M','J','P','G'),10, Size(frameR.size().width, frameR.size().height),true);
-                strTemp = "toolmandrel_" + string(buffer) + ".txt";
+                strTemp = "/mnt/sdb1/demonstrations/toolmandrel_" + string(buffer) + ".txt";
 
                 myfile.open(strTemp.c_str());
 
@@ -715,8 +715,8 @@ int main(int argc,char **argv)
 
                 if (int('r') == char(key) || key1==int('r'))
                 {
-                    string fname_l = "outL_" + string(buffer) + ".png";
-                    string fname_r = "outR_" + string(buffer) + ".png";
+                    string fname_l = "/mnt/sdb1/demonstrations/outL_" + string(buffer) + ".png";
+                    string fname_r = "/mnt/sdb1/demonstrations/outR_" + string(buffer) + ".png";
 
                     imwrite(fname_l.c_str(), frameL);
                     imwrite(fname_r.c_str(), frameR);

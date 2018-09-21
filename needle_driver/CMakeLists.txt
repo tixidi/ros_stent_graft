@@ -158,6 +158,8 @@ ${SIMPLE_PATH}/NeedleDriverInterface.cpp
 ${SIMPLE_PATH}/needleDriverMain.cpp
 )
 
+find_package(Qt5 COMPONENTS Core Widgets SerialPort REQUIRED)
+
 find_package( Qt4 REQUIRED )
 include( ${QT_USE_FILE} )
 SET(CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/ )

@@ -29,7 +29,6 @@ Faulharbermotor::Faulharbermotor()
 
     sertialPort1->setBaudRate(QSerialPort::Baud9600);
 
-
     // check connection ready or not by inquiring position
     for (int node=0; node<NODENO; node++)
     {
